@@ -134,12 +134,13 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
 | seed 42, full precision | 0.38 / 7.7e-3 / 9.4e-4 | 5.52e-4 | 2.4 |
 | seed 0, full precision | 0.54 / 1.1e-2 / 2.5e-3 | 1.51e-3 | 5.6 |
 | seed 1, full precision | 0.55 / 1.1e-2 / 2.4e-3 | 1.39e-3 | 4.3 |
+| seed 2, full precision | 0.53 / 1.4e-2 / 3.2e-3 | 1.73e-3 | 6.8 |
 | seed 42, JAX default precision (TF32) | 0.37 / 7.2e-3 / 9.6e-4 | 7.31e-4 | 1.8 |
 | ours, `default`, 10 runs | 0.47–0.59 / 1.4–2.1e-2 / 3.6–6.6e-3 | 2.3–5.0e-3 | 7.2–12.5 |
 
 - **The paper used seed 42**, and jaxpi reproduces the paper from it. With JAX's pre-0.5 random streams, jaxpi's seed 42 logs the paper's first step, so it starts from the same network (D18). It ends at 5.52e-4, and its error stays within about 10% of the paper's run the whole way, although its losses drift up to 2× from the paper's.
-- **Seed 42 was favorable.** jaxpi's seeds 0 and 1 end 2.5–2.7× above it. At 10k steps they are at 0.54–0.55, inside our range.
-- **Ours are still about 2× worse than jaxpi's other seeds:** our best of ten (2.27e-3) is above both. So the gap to the paper looks like two parts: about 2.6× from the paper's favorable seed, and about 2× from something in our training.
+- **Seed 42 was favorable.** jaxpi's seeds 0–2 end 2.5–3.1× above it. At 10k steps they are at 0.53–0.55, inside our range.
+- **Ours are still about 2× worse than jaxpi's other seeds:** the best of our 16 runs that did not start from seed 42's network (1.90e-3) is above all three, and their median (2.9e-3) is 1.9× jaxpi's (1.51e-3). So the gap to the paper looks like two parts: about 2.6× from the paper's favorable seed, and about 2× from something in our training.
 - **Not the initialization:** jaxpi's initial weights and ours have the same statistics, per layer: Glorot spread, the truncation at 2σ, log g ≈ N(0.5, 0.1²), and B ~ N(0, 1).
 - **Not the training step:** from jaxpi's seed-42 weights and one fixed batch, our `Trainer.train_step` and jaxpi's step agree.
   - Both losses are identical to 8 digits, and the chunk losses and causal weights agree to 3e-7.
@@ -156,15 +157,15 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   | seed 42 | 5.52e-4 | 3.44e-4 | 0.62 |
   | seed 0 | 1.51e-3 | 2.27e-3 | 1.50 |
   | seed 1 | 1.39e-3 | 4.35e-3 | 3.13 |
-  | seed 2 | running | 2.59e-3 | |
-  | seed 3 | queued | 3.34e-3 | |
+  | seed 2 | 1.73e-3 | 2.59e-3 | 1.50 |
+  | seed 3 | running | 3.34e-3 | |
   | seed 4 | queued | 2.87e-3 | |
   | seed 5 | queued | 1.90e-3 | |
 
   - **jaxpi's initial networks are no better than ours.** From jaxpi's seeds 0–5, our trainer ends at 1.90–4.35e-3 (median 2.73e-3), the same spread as from our own networks (2.27–4.81e-3, median 2.93e-3).
-  - **jaxpi's trainer may do better than ours.** Its seeds 0 and 1 (1.39–1.51e-3) are below all 16 of our `default` runs that did not start from seed 42's network (1.90e-3 or more). In all three pairs ours is behind from 20k steps on (1.13–1.39× jaxpi's error at 20k and 40k); only seed 42's run overtakes later.
+  - **jaxpi's trainer looks better than ours.** Its seeds 0–2 (1.39–1.73e-3) are below all 16 of our `default` runs that did not start from seed 42's network (1.90e-3 or more). In all four pairs ours is behind at 40k steps (1.13–1.39× jaxpi's error); only seed 42's run overtakes later.
   - The final losses of each pair are close (L_r within 1.7×, L_ic within 3.4×, in both directions). So where ours ends worse, it does so at about the same loss.
-  - jaxpi's seeds 2–5 (queued) settle this. If they also land near 1.5e-3, our loop differs from jaxpi's somewhere the one-step test does not reach.
+  - jaxpi's seeds 3–5 are running. If they also land near 1.5e-3, our loop differs from jaxpi's somewhere the one-step test does not reach. The only known difference left is the IC grid (above), and a test of it is queued (below).
 - **The error comes from one spot: x = 0, early on** (`scripts/error_location.py` prints this for any finished run). It holds in all 17 `default` runs checked (five `log`, five `direct`, seven from jaxpi's networks), and in `no_causal`, `no_grad_norm` and `no_rwf`:
   - At t = 1, over 99% of the squared error lies within |x| < 0.1, and about 90% of all of it falls in t > 0.75.
   - u₀ = x² cos(πx) has a double zero at x = 0, so the solution starts at the unstable state u = 0 there, and errors grow roughly like e^{5t}. An error growing that way nearly satisfies the linearized PDE, so the residual hardly sees it. Only the initial condition holds it down.
@@ -172,8 +173,10 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   - So each run's error is fixed by how closely the network holds u ≈ 0 near x = 0 for t ≤ 0.1, amplified about 100×. That is why runs with the same losses end up to 14× apart, and why rel. L2 / √L_r ranges from 1.5 to 12.5.
   - In `default` the early residual sets that error: it grows 5–17× by t = 0.1, faster than the e^{0.5} ≈ 1.65 a pure initial-condition error would. In `no_grad_norm` the error at t = 0 is 10× larger (3–6e-4) and grows only 1.6–1.7× by t = 0.1, so there the IC fit sets it. That is likely how grad-norm weighting helps here: by up-weighting the IC loss, it pins u at x = 0.
   - The IC error elsewhere peaks at the kink of u₀ at x = ±1 (up to 1e-3), but that region settles to u = −1 and contributes nothing.
-  - jaxpi's runs from seed 2 on save their final network and its prediction (`~/jaxpi-runs/*_final.npz`), so the same breakdown can show whether jaxpi's trainer holds that spot better.
-- **Running:** jaxpi's own seeds 2–5, re-launched by `runs\from_jaxpi_init2.ps1` after our trainer finished jaxpi's seeds 42 and 0–5 (in `runs/allen_cahn/from_jaxpi_init/seedN/`).
+  - **jaxpi's trainer fails the same way, less.** jaxpi's runs from seed 2 on save their final network (`~/jaxpi-runs/*_final.npz`). Loaded into our model, seed 2's matches jaxpi's prediction to 7.6e-7 and scores 1.74e-3 on our grid and reference. 99.9% of its error at t = 1 lies within |x| < 0.1, the error at x = 0 is positive, and rel. L2 is 0.069 × the error at (t = 1, x = 0). Its error at x = 0 is 2.3e-5 at t = 0 and 1.95e-4 at t = 0.1, against 3.4e-5 and 2.9e-4 from our trainer on the same start.
+- **Running:**
+  - jaxpi's own seeds 3–5, re-launched by `runs\from_jaxpi_init2.ps1` after our trainer finished jaxpi's seeds 42 and 0–5 (in `runs/allen_cahn/from_jaxpi_init/seedN/`);
+  - then `runs\icgrid_chain.ps1`: our trainer from jaxpi's seeds 0–5 again, with the IC loss on jaxpi's grid (`--ic-grid jaxpi`), into `runs/allen_cahn/from_jaxpi_init_icgrid/seedN/`. If these land near jaxpi's results, the grid is the cause.
   - The script `from_jaxpi_init.py` and the exported arrays (`init_seedN_legacy.npz`, also in `~/jaxpi-runs`) are in the session scratchpad, outside the repo.
   - Our model reproduces jaxpi's initial predictions to 7.6e-7 from the loaded arrays.
   - The chain (`~/jaxpi-runs/chain.sh` in Ubuntu) takes about 50 min per run. It skips finished runs, and an interrupted run starts over.
