@@ -156,23 +156,24 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   | seed 42 | 5.52e-4 | 3.44e-4 | 0.62 |
   | seed 0 | 1.51e-3 | 2.27e-3 | 1.50 |
   | seed 1 | 1.39e-3 | 4.35e-3 | 3.13 |
-  | seed 2 | queued | 2.59e-3 | |
+  | seed 2 | running | 2.59e-3 | |
+  | seed 3 | queued | 3.34e-3 | |
+  | seed 4 | queued | 2.87e-3 | |
+  | seed 5 | queued | 1.90e-3 | |
 
-  - **jaxpi's initial networks are no better than ours.** From jaxpi's seeds 0–2, our trainer ends at 2.27–4.35e-3, the same spread as from our own networks (2.27–4.81e-3).
-  - **jaxpi's trainer may do better than ours.** Its seeds 0 and 1 (1.39–1.51e-3) are below all 13 of our `default` runs that did not start from seed 42's network (2.27e-3 or more). In all three pairs ours is behind from 20k steps on (1.13–1.39× jaxpi's error at 20k and 40k); only seed 42's run overtakes later.
+  - **jaxpi's initial networks are no better than ours.** From jaxpi's seeds 0–5, our trainer ends at 1.90–4.35e-3 (median 2.73e-3), the same spread as from our own networks (2.27–4.81e-3, median 2.93e-3).
+  - **jaxpi's trainer may do better than ours.** Its seeds 0 and 1 (1.39–1.51e-3) are below all 16 of our `default` runs that did not start from seed 42's network (1.90e-3 or more). In all three pairs ours is behind from 20k steps on (1.13–1.39× jaxpi's error at 20k and 40k); only seed 42's run overtakes later.
   - The final losses of each pair are close (L_r within 1.7×, L_ic within 3.4×, in both directions). So where ours ends worse, it does so at about the same loss.
   - jaxpi's seeds 2–5 (queued) settle this. If they also land near 1.5e-3, our loop differs from jaxpi's somewhere the one-step test does not reach.
-- **The error comes from one spot: x = 0, early on** (`scripts/error_location.py` prints this for any finished run). It holds in all 14 `default` runs checked (five `log`, five `direct`, four from jaxpi's networks), and in `no_causal`, `no_grad_norm` and `no_rwf`:
+- **The error comes from one spot: x = 0, early on** (`scripts/error_location.py` prints this for any finished run). It holds in all 17 `default` runs checked (five `log`, five `direct`, seven from jaxpi's networks), and in `no_causal`, `no_grad_norm` and `no_rwf`:
   - At t = 1, over 99% of the squared error lies within |x| < 0.1, and about 90% of all of it falls in t > 0.75.
   - u₀ = x² cos(πx) has a double zero at x = 0, so the solution starts at the unstable state u = 0 there, and errors grow roughly like e^{5t}. An error growing that way nearly satisfies the linearized PDE, so the residual hardly sees it. Only the initial condition holds it down.
-  - The error at x = 0 is positive in every run. In `default` it is 6e-6 to 6.4e-5 at t = 0, 5–17× more by t = 0.1, and another 110–140× by t = 1. The final rel. L2 is 0.064–0.070 × the error at (t = 1, x = 0) in 13 of the 14 runs (0.10 from seed 42's network).
+  - The error at x = 0 is positive in every run. In `default` it is 6e-6 to 6.4e-5 at t = 0, 5–17× more by t = 0.1, and another 110–140× by t = 1. The final rel. L2 is 0.059–0.070 × the error at (t = 1, x = 0) in 16 of the 17 runs (0.10 from seed 42's network).
   - So each run's error is fixed by how closely the network holds u ≈ 0 near x = 0 for t ≤ 0.1, amplified about 100×. That is why runs with the same losses end up to 14× apart, and why rel. L2 / √L_r ranges from 1.5 to 12.5.
   - In `default` the early residual sets that error: it grows 5–17× by t = 0.1, faster than the e^{0.5} ≈ 1.65 a pure initial-condition error would. In `no_grad_norm` the error at t = 0 is 10× larger (3–6e-4) and grows only 1.6–1.7× by t = 0.1, so there the IC fit sets it. That is likely how grad-norm weighting helps here: by up-weighting the IC loss, it pins u at x = 0.
   - The IC error elsewhere peaks at the kink of u₀ at x = ±1 (up to 1e-3), but that region settles to u = −1 and contributes nothing.
   - jaxpi's runs from seed 2 on save their final network and its prediction (`~/jaxpi-runs/*_final.npz`), so the same breakdown can show whether jaxpi's trainer holds that spot better.
-- **Running** (`runs\from_jaxpi_init2.ps1`):
-  - our trainer from jaxpi's initial networks for seeds 3–5 (seeds 42 and 0–2 are done, in `runs/allen_cahn/from_jaxpi_init/seedN/`);
-  - then jaxpi's own seeds 2–5 (the script re-launches the chain).
+- **Running:** jaxpi's own seeds 2–5, re-launched by `runs\from_jaxpi_init2.ps1` after our trainer finished jaxpi's seeds 42 and 0–5 (in `runs/allen_cahn/from_jaxpi_init/seedN/`).
   - The script `from_jaxpi_init.py` and the exported arrays (`init_seedN_legacy.npz`, also in `~/jaxpi-runs`) are in the session scratchpad, outside the repo.
   - Our model reproduces jaxpi's initial predictions to 7.6e-7 from the loaded arrays.
   - The chain (`~/jaxpi-runs/chain.sh` in Ubuntu) takes about 50 min per run. It skips finished runs, and an interrupted run starts over.
