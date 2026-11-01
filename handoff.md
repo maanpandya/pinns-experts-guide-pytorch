@@ -15,7 +15,7 @@ Reproduce the Allen–Cahn ablation from the Expert's Guide (arXiv:2308.08468, *
 - **Results** (next section): every row has seeds 0–2, and `default` also seeds 3–4. By median, `no_grad_norm`, `no_fourier` and `plain` match the paper, and `no_rwf` is 1.8× high. `default` (3.9–8.2× high over five seeds) and `no_causal` (3.1–3.5×) are further off.
   - The paper's own logged runs (W&B) show the same loss weights and losses as ours, but lower error.
   - **Most of the `default` gap is the paper's seed** (see "jaxpi itself"). The paper ran seed 42, and jaxpi itself on seeds 0–5 gives 1.39–4.05e-3 (median 1.9e-3, 3.2× the paper). From the paper's own starting network, our trainer reaches 3.44e-4. What is left between our trainer and jaxpi's is about 1.2–1.5×, within the spread.
-  - **Given the same network and jaxpi's batches, our trainer follows jaxpi's run** step for step through 30k steps ("Ours leaves the early plateau a little later"). Given the paper's network and batch sequence, our `default` run ends at 5.56e-4, against the paper's 5.84e-4 and jaxpi's 5.52e-4 ("The paper's runs, replayed in our trainer").
+  - **Given the same network and jaxpi's batches, our trainer follows jaxpi's run** step for step through 30k steps ("Ours leaves the early plateau a little later"). Given the paper's network and batch sequence ("The paper's runs, replayed in our trainer"), our `default`, `no_rwf` and `no_grad_norm` runs end at 0.95, 1.01 and 0.89× the paper. `no_causal` ends 3.3× high after falling back to the plateau at 19.8k; whether that is chance is being tested.
   - **From the paper's starting networks, all six rows land near the paper** ("Table 2 from the paper's starting networks"): four within 0.59–1.05×, `no_causal` 2.8× high, and `no_fourier` escaped the wrong solution (8.1e-2), which 2 of our 7 runs of that row do.
   - The error comes almost entirely from near x = 0, where u₀ has a double zero, so errors grow like e^{5t}.
 
@@ -225,16 +225,19 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   |---|--:|--:|--:|--:|
   | `default` | 5.84e-4 | 5.52e-4 | 5.56e-4 | 0.95 |
   | `no_causal` | 1.59e-3 | 1.29e-3 | 5.26e-3 | 3.31 |
-  | `no_rwf` | 6.62e-3 | 3.83e-3 | running | |
-  | `no_grad_norm` | 7.51e-3 | | queued | |
-  | `no_fourier` | 4.35e-1 | | queued | |
+  | `no_rwf` | 6.62e-3 | 3.83e-3 | 6.72e-3 | 1.01 |
+  | `no_grad_norm` | 7.51e-3 | | 6.66e-3 | 0.89 |
+  | `no_fourier` | 4.35e-1 | | running | |
   | `plain` | 5.17e-1 | | queued | |
 
   - **`default` reproduces the paper.** Our replay stays within about 15% of jaxpi's run at every logged step (rel. L2 0.374 against 0.376 at 10k, 9.4e-4 against 9.4e-4 at 100k) and ends within 1% of it. jaxpi's run is itself within about 10% of the paper's. Its error sits at x = 0, as in every other run (0.102 × the error at (t = 1, x = 0)).
   - **`no_causal` falls back to the plateau where jaxpi's run does not.** Our replay follows jaxpi's run and the paper's to 19.7k (rel. L2 0.084 against 0.085). Then one burst in the losses at 19.8k (L_ic 3.6e-4 and L_r 1.2e-2, from about 2e-6 and 3e-4) throws it back to 0.50. It escapes again by 23k, 3k steps behind, and stays 1.5–4× behind to the end. Our run from the same network on our own batches fell back the same way at 19.3k and ended at 4.44e-3. jaxpi's and the paper's runs have bursts there too (L_r 1.1e-2 at 18k) without falling back. Both trainers fell back from seed 5's network (at 12.8k and 14k), so falling back is not ours alone. Nor are our loss bursts more frequent: over steps 5k–30k of the seven 30k replays on jaxpi's batches, 54 logged values of our L_r or L_ic exceed 10× the median of the previous 1k steps, against 64 of jaxpi's (9 against 15 at 30×). Whether ours falls back more often from this network is tested next.
+  - **`no_rwf` reproduces the paper.** Our replay ends within 1% of the paper (6.72e-3 against 6.63e-3) and is within 25% of it at every logged step from 30k on (3.3e-2 against 3.9e-2 at 30k, 9.3e-3 against 9.0e-3 at 100k). jaxpi's run on the same inputs ends 1.7× lower (3.83e-3). The paper's run has a burst at 15k (back up to 0.23 from 0.16) that neither jaxpi's nor ours has, so the paper's and jaxpi's runs also part from round-off.
+  - **`no_grad_norm` reproduces the paper.** Our replay ends at 0.89× the paper (6.66e-3 against 7.51e-3). Its error is within 20% of the paper's at every logged step: both sit on the plateau to 20k (0.52 against 0.51), escape by 40k (2.3e-2 against 2.8e-2), and end with the same losses (L_ic 7.3e-8 against 9.6e-8). There is no jaxpi run of this row. (The paper's logged step 0, rel. L2 3.7 here as in `default`, comes after the first Adam update; ours comes before it. From step 100 on the two agree: 0.767 against 0.771.)
+  - The error of all four replays sits at x = 0 (0.066–0.102 × the error at (t = 1, x = 0)).
 - **Running** (`runs\batch_test.ps1`, started 22:48 on 2026-10-31):
   - done: the 30k-step runs above and the `default` and `no_causal` replays. The queue was restarted at 01:32 (PST) on 2026-11-01 as `runs\from_paper_init.ps1` alone, to put the fall-back test ahead of the IC-grid runs. The `no_rwf` replay resumed from its 5k checkpoint (replays resume exactly, since the batch index follows the step);
-  - now: the other four replays, about 55 min each, until about 05:15;
+  - now: the `no_fourier` and `plain` replays (`no_rwf` and `no_grad_norm` finished at 03:28), until about 05:15;
   - then the fall-back test on `no_causal` from the paper's network, 30k steps each: jaxpi with sampler keys 1–3 (`~/jaxpi-runs/chain4.sh`), then ours with batch seeds 43–45 (`runs/allen_cahn/batch_test/no_causal_seed42_batchN/`). If jaxpi falls back near 20k about as often as ours, the `no_causal` replay is chance;
   - then the rest of the IC-grid test (the same script resumes seed 0 from step 60k and runs seeds 1–2), into `runs/allen_cahn/from_jaxpi_init_icgrid/seedN/`.
   - The scripts `from_jaxpi_init.py` (options `--row`, `--ic-grid`, `--batches`, `--steps`, `--eval-every`), `batch_test_compare.py` and `escape_steps.py`, the exported networks (`init_seed*_legacy*.npz`, also in `~/jaxpi-runs`) and jaxpi's batch sequence (`jaxpi_batches_key1234*.npy`, from `~/jaxpi-runs/export_batches.py`) are in the session scratchpad, outside the repo.
