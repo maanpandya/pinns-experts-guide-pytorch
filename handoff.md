@@ -180,7 +180,7 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
     | seed 1 | 1.39e-3 | 4.35e-3 | 2.06e-3 | 0.47 |
     | seed 2 | 1.73e-3 | 2.59e-3 | 1.76e-3 | 0.68 |
 
-    - Each pair stays within 5% through 40k steps, then drifts apart, as same-network pairs do. The error sits at x = 0 in all six (0.065–0.071 × the error at (t = 1, x = 0)). The error at (t = 0, x = 0) is about the same in each pair (2.3–3.2e-5 with jaxpi's grid, 2.7–6.4e-5 with ours), although our grid has a point at x = 0 and jaxpi's does not.
+    - Each pair stays within 10% through 40k steps, then drifts apart, as same-network pairs do. The error sits at x = 0 in all six (0.065–0.071 × the error at (t = 1, x = 0)). The error at (t = 0, x = 0) is about the same in each pair (2.3–3.2e-5 with jaxpi's grid, 2.7–6.4e-5 with ours), although our grid has a point at x = 0 and jaxpi's does not.
     - With jaxpi's grid, ours ends at 1.02–1.71× jaxpi's run from the same network (geometric mean 1.37), against 1.50–3.13× (1.92) with our grid. Three pairs, with ratios of 0.47–1.14 when same-network pairs differ by up to 3.1× anyway, cannot settle this. Seeds 3–5 are running (`runs\icgrid_more.ps1`, started 10:00).
 - **The error comes from one spot: x = 0, early on** (`scripts/error_location.py` prints this for any finished run). It holds in all 17 `default` runs checked (five `log`, five `direct`, seven from jaxpi's networks), and in `no_causal`, `no_grad_norm` and `no_rwf`:
   - At t = 1, over 99% of the squared error lies within |x| < 0.1, and about 90% of all of it falls in t > 0.75.
