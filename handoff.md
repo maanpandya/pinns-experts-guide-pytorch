@@ -206,12 +206,23 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   - Over the nine same-network pairs (`default` seeds 42 and 0–5, `no_causal` and `no_rwf` seed 42), read on the same 1000-step grid, ours first drops below rel. L2 0.3 and 0.1 later in 6 pairs and at the same step in 3, never earlier: about 8% (1–2k steps) later on average. Below 0.03 it is later in 7 of 9. (Reading jaxpi's 100-step log against our 1000-step evaluations exaggerates this, to 9 of 9.)
   - The IC grid is not the cause: from jaxpi's seed-0 network, our trainer with jaxpi's IC grid drops below 0.3, 0.1 and 0.03 at 17k, 18k and 25k, the same steps as with our grid.
   - **Given jaxpi's batches, our trainer follows jaxpi's trajectory.** jaxpi's residual sampler uses the fixed key `PRNGKey(1234)`, whatever the seed, so every jaxpi run (and every paper run) trains on the same batch sequence. Exported and fed to our trainer from seed 42's network, with jaxpi's IC grid, it gives λ_ic = 49.25 after the first update (the paper's 49.2; ours with our own batches gives 52), the same λ_ic to two decimals through 3k steps, and rel. L2 within a few percent of jaxpi's run through 30k steps: below 0.3, 0.1 and 0.03 at 10.6k, 14.1k and 23.4k, against jaxpi's 10.6k, 14.0k and 22.9k.
-  - So the two training loops are the same, and the escape timing is set by the network and the batch sequence. All nine jaxpi runs share one sequence, so the pairs are not independent on jaxpi's side. Whether that sequence is a favorable one is being tested (below).
-- **Running** (`runs\batch_test.ps1`, started 22:48 on 2026-10-31, 30k-step runs into `runs/allen_cahn/batch_test/`):
-  - jaxpi seed 42 with sampler keys 1, 2, 3 (`~/jaxpi-runs/chain3.sh`, `run_ac.py --sampler-key K`), to see whether other batch sequences delay jaxpi's escape as ours are delayed;
-  - our trainer from seed 42's network with two more batch seeds (43, 44), for our spread on that network;
-  - our trainer on jaxpi's batches from jaxpi's seed 0–5 networks, against jaxpi's own runs of those seeds;
-  - then the rest of the IC-grid test (`runs\from_paper_init.ps1` again, which resumes seed 0 from step 60k and runs seeds 1–2), into `runs/allen_cahn/from_jaxpi_init_icgrid/seedN/`.
+  - So the two training loops are the same, and the escape timing is set by the network and the batch sequence. All nine jaxpi runs share one sequence, so the pairs are not independent on jaxpi's side.
+  - **That sequence is a favorable one.** From seed 42's network (30k-step runs in `runs/allen_cahn/batch_test/` and `~/jaxpi-runs/*_key*_30k.jsonl`; steps where rel. L2 first drops below 0.3, 0.1, 0.03):
+
+    | Run | < 0.3 | < 0.1 | < 0.03 |
+    |---|--:|--:|--:|
+    | jaxpi, sampler key 1234 (the paper's batches) | 10.6k | 14.0k | 22.9k |
+    | ours on those batches | 10.6k | 14.1k | 23.4k |
+    | jaxpi, keys 1, 2, 3 | 11.6k, 11.4k, 11.5k | 14.4k, 14.4k, 14.7k | 23.9k, 25.2k, 27.7k |
+    | ours, batch seeds 43, 44 | 11.6k, 10.8k | 15.0k, 14.0k | 25.6k, 22.7k |
+    | ours, batch seed 42 (1000-step grid) | 12k | 16k | 25k |
+
+    With other batch sequences, jaxpi leaves the plateau as late as ours does. Key 1234 is the earliest of the seven runs at 0.3. So the "ours is later" pattern of the nine pairs is the paper's batch sequence, like the seed gap before it, and not a difference between the trainers.
+- **Running** (`runs\batch_test.ps1`, started 22:48 on 2026-10-31):
+  - done: the 30k-step runs above;
+  - now: our trainer on jaxpi's batches from jaxpi's seed 0–5 networks (30k steps), against jaxpi's own runs of those seeds;
+  - then **the paper's runs replayed in our trainer** (added to `runs\from_paper_init.ps1`, which the queue calls last): for each of the six rows, the paper's network, the paper's batch sequence (`jaxpi_batches_key1234_200k.npy`, 6.5 GB) and jaxpi's IC grid, all 200k steps, into `runs/allen_cahn/paper_replay/<row>/`, about 5.5 h. jaxpi with key 1234 matches the paper's logged steps 0 and 100 to 3–4 digits on `default`, `no_causal` and `no_rwf`, so these re-run the paper's own experiment in our code. How closely they track the paper over 200k steps shows how far round-off alone moves a run;
+  - then the rest of the IC-grid test (the same script resumes seed 0 from step 60k and runs seeds 1–2), into `runs/allen_cahn/from_jaxpi_init_icgrid/seedN/`.
   - The scripts `from_jaxpi_init.py` (options `--row`, `--ic-grid`, `--batches`, `--steps`, `--eval-every`), `batch_test_compare.py` and `escape_steps.py`, the exported networks (`init_seed*_legacy*.npz`, also in `~/jaxpi-runs`) and jaxpi's batch sequence (`jaxpi_batches_key1234*.npy`, from `~/jaxpi-runs/export_batches.py`) are in the session scratchpad, outside the repo.
   - The jaxpi chains take about 50 min per run. They skip finished runs, and an interrupted run starts over.
   - Launch `.ps1` queues with a relative `-File` path. `Start-Process` does not quote its arguments, so a full path through "Python Code" breaks at the space and the queue exits at once.
@@ -222,7 +233,7 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
 - **License** (read 2026-10-30): jaxpi may be used, copied and modified for non-profit research only, and not distributed to third parties without Penn's approval. Publications should acknowledge it. Keep its code, and the wrapper, out of this repository, and never imitate its code here.
 
 ## Next steps
-- **Read the batch-sequence test** (`batch_test_compare.py` in the scratchpad prints it). If jaxpi with other sampler keys leaves the plateau as late as ours, the remaining same-network gap is the paper's batch sequence, like the seed gap before it.
+- **Read the paper replays** (`runs/allen_cahn/paper_replay/<row>/`) against the paper's W&B runs, row by row. If they land near the paper's values, our pipeline reproduces Table 2 given the paper's network and batches, and every remaining difference is seed and batch luck.
 - **Same-network pairs differ by up to 3.4×** from batches and round-off alone, so read single runs with that in mind.
 - **Report Table 2 as distributions.** The paper's values are single seed-42 runs, and for `default` that seed is about 3× better than jaxpi's own typical seed. A fair comparison sets our seed spread against jaxpi's, not against one number.
 - **Comparing with the paper's runs:** the W&B histories can be read without an account through `https://api.wandb.ai/graphql` (project `jaxpi/allen_cahn`; run ids in `docs/decisions.md`, JW). They log the error, both losses, both weights and the minimum causal weight every 100 steps. Prefer them over values read off EG Fig. 4.
