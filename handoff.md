@@ -15,6 +15,7 @@ Reproduce the Allen–Cahn ablation from the Expert's Guide (arXiv:2308.08468, *
 - **Results** (next section): every row has seeds 0–2, and `default` also seeds 3–4. By median, `no_grad_norm`, `no_fourier` and `plain` match the paper, and `no_rwf` is 1.8× high. `default` (3.9–8.2× high over five seeds) and `no_causal` (3.1–3.5×) are further off.
   - The paper's own logged runs (W&B) show the same loss weights and losses as ours, but lower error.
   - **Most of the `default` gap is the paper's seed** (see "jaxpi itself"). The paper ran seed 42, and jaxpi itself on seeds 0–5 gives 1.39–4.05e-3 (median 1.9e-3, 3.2× the paper). From the paper's own starting network, our trainer reaches 3.44e-4. What is left between our trainer and jaxpi's is about 1.2–1.5×, within the spread.
+  - **From the paper's starting networks, all six rows land near the paper** ("Table 2 from the paper's starting networks"): four within 0.59–1.05×, `no_causal` 2.8× high, and `no_fourier` escaped the wrong solution (8.1e-2), which 2 of our 7 runs of that row do.
   - The error comes almost entirely from near x = 0, where u₀ has a double zero, so errors grow like e^{5t}.
 
 ## Current results (`scale_param: direct`)
