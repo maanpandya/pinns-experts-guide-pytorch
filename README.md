@@ -24,7 +24,7 @@ It is a course project for CEE 292 at Stanford, and is a work in progress.
 | Allen–Cahn problem, reference data, exact periodic embedding | done |
 | Random Fourier features, random weight factorization | done |
 | Grad-norm loss weighting, causal weighting | done |
-| Expert's Guide Table 2 ablation configs and runner | done, results pending |
+| Expert's Guide Table 2 ablation configs and runner | done, results in [`docs/results.md`](docs/results.md) |
 | Modified MLP, PirateNet + physics-informed init, NTK weighting | not started |
 
 ## Install
@@ -65,7 +65,7 @@ piratenets/problems/   allen_cahn.py: PDE residual, sampling, reference data
 configs/               one YAML per experiment (one per Table 2 row)
 scripts/               train, run_ablation, benchmark_step, plot_*
 data/                  reference solution and its generator
-docs/                  spec.md, decisions.md
+docs/                  spec.md, decisions.md, results.md
 tests/                 pytest suite
 ```
 
