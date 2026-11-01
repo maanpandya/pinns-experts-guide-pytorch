@@ -186,13 +186,14 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   | `default` | 5.84e-4 | 3.44e-4 | 0.59 | 2.93e-3 |
   | `no_causal` | 1.59e-3 | 4.44e-3 | 2.79 | 5.16e-3 |
   | `no_grad_norm` | 7.51e-3 | 5.51e-3 | 0.73 | 6.14e-3 |
-  | `no_rwf` | 6.62e-3 | running | | 1.20e-2 |
-  | `no_fourier` | 4.35e-1 | queued | | 5.06e-1 |
+  | `no_rwf` | 6.62e-3 | 6.96e-3 | 1.05 | 1.20e-2 |
+  | `no_fourier` | 4.35e-1 | running | | 5.06e-1 |
   | `plain` | 5.17e-1 | queued | | 5.08e-1 |
 
   - `no_grad_norm` follows the paper's run closely the whole way: error, both losses, and the causal weights opening by 20k.
+  - `no_rwf` leaves the plateau a little later (0.47 at 10k, against the paper's 0.16), then follows the paper's run within 15% from 20k to the end. Its own-network runs (7.6e-3 to 1.39e-2) are all above it, so here too the paper's seed was on the good side.
   - `no_causal` follows it to 10k, then leaves the plateau later (0.50 at 20k, against the paper's 0.084), and stays 1.5–2.8× behind to the end. That is within the 0.47–3.1× spread of the same-network pairs above. jaxpi's own seed-42 run of this row (queued) will show whether jaxpi lands on the paper's value.
-  - Both put their error at x = 0, like every other run: 100% of the squared error at t = 1 lies within |x| < 0.1, and rel. L2 is 0.064–0.067 × the error at (t = 1, x = 0).
+  - All three put their error at x = 0, like every other run: 99.9% or more of the squared error at t = 1 lies within |x| < 0.1, and rel. L2 is 0.064–0.075 × the error at (t = 1, x = 0).
   - The queue's window closed at 17:59, with `no_grad_norm` at step 132k (the laptop was in use then). It was relaunched at 18:00 and resumed from the checkpoint.
 - **Running** (`runs\from_paper_init.ps1`, started 16:32 on 2026-10-31, about 8 h in all):
   - our trainer from the paper's initial networks (jaxpi's seed 42) on the other five rows, into `runs/allen_cahn/from_paper_init/<row>/`. `no_causal` and `no_grad_norm` start from `default`'s network (jaxpi's configs for them differ only in the switch, so they build the same one). `no_rwf`, `no_fourier` and `plain` use their own seed-42 networks, exported from jaxpi's configs of the same names. Each matches jaxpi's initial predictions to under 1e-6. Together with `default` (3.44e-4 above) this gives a Table 2 from the paper's own starting networks.
