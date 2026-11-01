@@ -179,6 +179,21 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   - In `default` the early residual sets that error: it grows 5–17× by t = 0.1, faster than the e^{0.5} ≈ 1.65 a pure initial-condition error would. In `no_grad_norm` the error at t = 0 is 10× larger (3–6e-4) and grows only 1.6–1.7× by t = 0.1, so there the IC fit sets it. That is likely how grad-norm weighting helps here: by up-weighting the IC loss, it pins u at x = 0.
   - The IC error elsewhere peaks at the kink of u₀ at x = ±1 (up to 1e-3), but that region settles to u = −1 and contributes nothing.
   - **jaxpi's trainer fails the same way.** jaxpi's runs of seeds 2–5 saved their final networks (`~/jaxpi-runs/*_final.npz`). Loaded into our model, they match jaxpi's predictions to under 1e-6 and score the same on our grid and reference. In all four, 99.9% or more of the error at t = 1 lies within |x| < 0.1, the error at x = 0 is positive, and rel. L2 is 0.063–0.069 × the error at (t = 1, x = 0). Their error at (t = 0.1, x = 0) is 1.95–5.17e-4, against 2.87–3.97e-4 from our trainer on the same starts.
+- **Table 2 from the paper's starting networks** (our trainer from jaxpi's seed-42 network for each row, `runs/allen_cahn/from_paper_init/<row>/`; `default` is the seed-42 run above). The last column is the median from "Current results", our runs from our own networks.
+
+  | Row | Paper | Ours from the paper's network | Ours / paper | Ours, own networks (median) |
+  |---|--:|--:|--:|--:|
+  | `default` | 5.84e-4 | 3.44e-4 | 0.59 | 2.93e-3 |
+  | `no_causal` | 1.59e-3 | 4.44e-3 | 2.79 | 5.16e-3 |
+  | `no_grad_norm` | 7.51e-3 | 5.51e-3 | 0.73 | 6.14e-3 |
+  | `no_rwf` | 6.62e-3 | running | | 1.20e-2 |
+  | `no_fourier` | 4.35e-1 | queued | | 5.06e-1 |
+  | `plain` | 5.17e-1 | queued | | 5.08e-1 |
+
+  - `no_grad_norm` follows the paper's run closely the whole way: error, both losses, and the causal weights opening by 20k.
+  - `no_causal` follows it to 10k, then leaves the plateau later (0.50 at 20k, against the paper's 0.084), and stays 1.5–2.8× behind to the end. That is within the 0.47–3.1× spread of the same-network pairs above. jaxpi's own seed-42 run of this row (queued) will show whether jaxpi lands on the paper's value.
+  - Both put their error at x = 0, like every other run: 100% of the squared error at t = 1 lies within |x| < 0.1, and rel. L2 is 0.064–0.067 × the error at (t = 1, x = 0).
+  - The queue's window closed at 17:59, with `no_grad_norm` at step 132k (the laptop was in use then). It was relaunched at 18:00 and resumed from the checkpoint.
 - **Running** (`runs\from_paper_init.ps1`, started 16:32 on 2026-10-31, about 8 h in all):
   - our trainer from the paper's initial networks (jaxpi's seed 42) on the other five rows, into `runs/allen_cahn/from_paper_init/<row>/`. `no_causal` and `no_grad_norm` start from `default`'s network (jaxpi's configs for them differ only in the switch, so they build the same one). `no_rwf`, `no_fourier` and `plain` use their own seed-42 networks, exported from jaxpi's configs of the same names. Each matches jaxpi's initial predictions to under 1e-6. Together with `default` (3.44e-4 above) this gives a Table 2 from the paper's own starting networks.
   - then jaxpi itself, seed 42, on `no_causal` and `no_rwf` (`~/jaxpi-runs/chain2.sh`), to check that jaxpi reproduces the paper on those rows as it does on `default`;
