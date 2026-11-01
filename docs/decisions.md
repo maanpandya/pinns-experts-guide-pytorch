@@ -122,6 +122,7 @@ decision means editing YAML, not code.
   - EG Algorithm 1 step 5(a) says the IC points are also sampled randomly, but never gives how many.
   - JL evaluates the IC loss on the x-grid of the reference data.
   - An earlier provisional choice used 4,096 random points per step.
+- **Tested (2026-11-01):** jaxpi's reference grid is `linspace(-1, 1, 512)`, which holds x = ±1 twice and has no point at x = 0. Ours is 512 periodic points on [-1, 1). We ran six pairs of `default`, each pair from one of jaxpi's seed 0–5 networks with the same batches, one on each grid. jaxpi's grid / ours: 1.14, 0.47, 0.68, 0.97, 0.88, 2.61 (geometric mean 0.97, Wilcoxon p = 0.84). The grid makes no measurable difference, so ours stays.
 
 ### D12. Number of causal chunks M: from JC
 - **Decision:** M = 32 (`causal.num_chunks`).

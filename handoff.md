@@ -172,16 +172,20 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   - **jaxpi's initial networks are no better than ours.** From jaxpi's seeds 0–5, our trainer ends at 1.90–4.35e-3 (median 2.73e-3), the same spread as from our own networks (2.27–4.81e-3, median 2.93e-3).
   - **jaxpi's trainer is at most slightly better.** Over seeds 0–5 it gives 1.39–4.05e-3 (median 1.9e-3), against ours 1.90–4.35e-3 (median 2.7e-3) from the same networks. Ours is worse in 5 of the 7 pairs; the geometric mean of the ratios is 1.19 (1.32 without seed 42). Ours is behind at 40k steps in 6 of 7 pairs (0.82–1.43× jaxpi's error).
   - The final losses of each pair are close (L_r within 1.8×, L_ic within 3.4×, in both directions).
-  - The only known difference left between the loops is the IC grid (above). **IC-grid test** (`runs/allen_cahn/from_jaxpi_init_icgrid/seedN/`): the same network and batches as `from_jaxpi_init/seedN/`, with the IC loss on jaxpi's `linspace(-1, 1, 512)` instead of our periodic grid:
+  - The only known difference left between the loops is the IC grid (above). **It makes no difference (D11).** **IC-grid test** (`runs/allen_cahn/from_jaxpi_init_icgrid/seedN/`): the same network and batches as `from_jaxpi_init/seedN/`, with the IC loss on jaxpi's `linspace(-1, 1, 512)` instead of our periodic grid:
 
     | jaxpi's network | jaxpi's trainer | Ours, our grid | Ours, jaxpi's grid | jaxpi's grid / our grid |
     |---|--:|--:|--:|--:|
     | seed 0 | 1.51e-3 | 2.27e-3 | 2.58e-3 | 1.14 |
     | seed 1 | 1.39e-3 | 4.35e-3 | 2.06e-3 | 0.47 |
     | seed 2 | 1.73e-3 | 2.59e-3 | 1.76e-3 | 0.68 |
+    | seed 3 | 2.89e-3 | 3.34e-3 | 3.26e-3 | 0.97 |
+    | seed 4 | 2.03e-3 | 2.87e-3 | 2.52e-3 | 0.88 |
+    | seed 5 | 4.05e-3 | 1.90e-3 | 4.96e-3 | 2.61 |
 
     - Each pair stays within 10% through 40k steps, then drifts apart, as same-network pairs do. The error sits at x = 0 in all six (0.065–0.071 × the error at (t = 1, x = 0)). The error at (t = 0, x = 0) is about the same in each pair (2.3–3.2e-5 with jaxpi's grid, 2.7–6.4e-5 with ours), although our grid has a point at x = 0 and jaxpi's does not.
-    - With jaxpi's grid, ours ends at 1.02–1.71× jaxpi's run from the same network (geometric mean 1.37), against 1.50–3.13× (1.92) with our grid. Three pairs, with ratios of 0.47–1.14 when same-network pairs differ by up to 3.1× anyway, cannot settle this. Seeds 3–5 are running (`runs\icgrid_more.ps1`, started 10:00).
+    - Over the six pairs, jaxpi's grid / ours has a geometric mean of 0.97 (Wilcoxon p = 0.84). After seeds 0–2 it looked like 0.71, which seeds 3–5 undid.
+    - On either grid, ours ends about 1.3× above jaxpi's run from the same network (geometric mean 1.32 with our grid, 1.28 with jaxpi's). jaxpi's runs all train on the paper's batch sequence (key 1234), which is favorable ("Ours leaves the early plateau a little later"); ours each draw their own. Whether that sequence accounts for the 1.3× is tested next (`runs/allen_cahn/paper_batches/`).
 - **The error comes from one spot: x = 0, early on** (`scripts/error_location.py` prints this for any finished run). It holds in all 17 `default` runs checked (five `log`, five `direct`, seven from jaxpi's networks), and in `no_causal`, `no_grad_norm` and `no_rwf`:
   - At t = 1, over 99% of the squared error lies within |x| < 0.1, and about 90% of all of it falls in t > 0.75.
   - u₀ = x² cos(πx) has a double zero at x = 0, so the solution starts at the unstable state u = 0 there, and errors grow roughly like e^{5t}. An error growing that way nearly satisfies the linearized PDE, so the residual hardly sees it. Only the initial condition holds it down.
@@ -262,8 +266,8 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
 - **Running** (queues in `runs\`, the first started 22:48 on 2026-10-31):
   - done: the 30k-step runs above and the `default` and `no_causal` replays. The queue was restarted at 01:32 (PST) on 2026-11-01 as `runs\from_paper_init.ps1` alone, to put the fall-back test ahead of the IC-grid runs. The `no_rwf` replay resumed from its 5k checkpoint (replays resume exactly, since the batch index follows the step);
   - all six replays finished by 05:01. The first round of the fall-back test (jaxpi keys 1–3 via `~/jaxpi-runs/chain4.sh`, ours batch seeds 43–45) finished by 05:52. The second round (`runs\fallback_more.ps1`: jaxpi keys 4–9 via `~/jaxpi-runs/chain5.sh`, ours batch seeds 46–51) finished by 07:36. The queue before it was stopped right after the IC-grid seed 0 run saved step 70k;
-  - the IC-grid test's seeds 0–2 finished at 09:57;
-  - now: its seeds 3–5 (`runs\icgrid_more.ps1`, started 10:00; about 55 min each), until about 12:45.
+  - the IC-grid test's seeds 0–2 finished at 09:57, and seeds 3–5 (`runs\icgrid_more.ps1`) at 12:38;
+  - now (`runs\paper_batches.ps1`, started 12:45): our `default` from jaxpi's seed 0–5 networks, on jaxpi's batch sequence with jaxpi's IC grid, to 200k steps. Each run continues the 30k-step replay `runs/allen_cahn/batch_test/replay_seedN/`, copied to `runs/allen_cahn/paper_batches/seedN/` first. About 50 min each, until about 18:00.
   - The scripts `from_jaxpi_init.py` (options `--row`, `--ic-grid`, `--batches`, `--steps`, `--eval-every`), `batch_test_compare.py` and `escape_steps.py`, the exported networks (`init_seed*_legacy*.npz`, also in `~/jaxpi-runs`) and jaxpi's batch sequence (`jaxpi_batches_key1234*.npy`, from `~/jaxpi-runs/export_batches.py`) are in the session scratchpad, outside the repo.
   - The jaxpi chains take about 50 min per run. They skip finished runs, and an interrupted run starts over.
   - Launch `.ps1` queues with a relative `-File` path. `Start-Process` does not quote its arguments, so a full path through "Python Code" breaks at the space and the queue exits at once.
@@ -275,7 +279,7 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
 
 ## Next steps
 - **The Table 2 gap is explained.** Given the paper's network and batches, our trainer lands on the paper's values, except in `no_causal` (a fall-back, 1 in 10 for jaxpi too) and `no_fourier` (an escape, 3 in 8 of ours). From our own networks and batches, the remaining differences are the paper's favorable seed 42 and batch sequence (key 1234). What is left to do is reporting, not finding a bug. `docs/results.md` (2026-11-01) is a first write-up.
-- **Read IC-grid seeds 3–5** (`runs/allen_cahn/from_jaxpi_init_icgrid/seed{3,4,5}/` against `from_jaxpi_init/seedN/`: 3.34e-3, 2.87e-3, 1.90e-3 with our grid). If jaxpi's grid comes out lower in most of the six pairs, consider making it an option of the trainer (D11; the paper gives no grid, so jaxpi's would become the default under the D20 rule) and re-running `default`. Otherwise record D11 as tested and leave it.
+- **Read `runs/allen_cahn/paper_batches/seed{0..5}/`** against jaxpi's seed 0–5 runs (1.51, 1.39, 1.73, 2.89, 2.03, 4.05e-3). If they land near those values, the last 1.3× between our trainer and jaxpi's is the batch sequence, as the 4% gap on seed 42 (`paper_replay/default`) suggests.
 - **Same-network pairs differ by up to 3.4×** from batches and round-off alone, so read single runs with that in mind.
 - **Report Table 2 as distributions.** The paper's values are single seed-42 runs, and for `default` that seed is about 3× better than jaxpi's own typical seed. A fair comparison sets our seed spread against jaxpi's, not against one number.
 - **Comparing with the paper's runs:** the W&B histories can be read without an account through `https://api.wandb.ai/graphql` (project `jaxpi/allen_cahn`; run ids in `docs/decisions.md`, JW). They log the error, both losses, both weights and the minimum causal weight every 100 steps. Prefer them over values read off EG Fig. 4.
