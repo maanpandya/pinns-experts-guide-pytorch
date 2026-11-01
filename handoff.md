@@ -15,7 +15,7 @@ Reproduce the Allen–Cahn ablation from the Expert's Guide (arXiv:2308.08468, *
 - **Results** (next section): every row has seeds 0–2, and `default` also seeds 3–4. By median, `no_grad_norm`, `no_fourier` and `plain` match the paper, and `no_rwf` is 1.8× high. `default` (3.9–8.2× high over five seeds) and `no_causal` (3.1–3.5×) are further off.
   - The paper's own logged runs (W&B) show the same loss weights and losses as ours, but lower error.
   - **Most of the `default` gap is the paper's seed** (see "jaxpi itself"). The paper ran seed 42, and jaxpi itself on seeds 0–5 gives 1.39–4.05e-3 (median 1.9e-3, 3.2× the paper). From the paper's own starting network, our trainer reaches 3.44e-4. What is left between our trainer and jaxpi's is about 1.2–1.5×, within the spread.
-  - **Given the same network and jaxpi's batches, our trainer follows jaxpi's run** step for step through 30k steps ("Ours leaves the early plateau a little later").
+  - **Given the same network and jaxpi's batches, our trainer follows jaxpi's run** step for step through 30k steps ("Ours leaves the early plateau a little later"). Given the paper's network and batch sequence, our `default` run ends at 5.56e-4, against the paper's 5.84e-4 and jaxpi's 5.52e-4 ("The paper's runs, replayed in our trainer").
   - **From the paper's starting networks, all six rows land near the paper** ("Table 2 from the paper's starting networks"): four within 0.59–1.05×, `no_causal` 2.8× high, and `no_fourier` escaped the wrong solution (8.1e-2), which 2 of our 7 runs of that row do.
   - The error comes almost entirely from near x = 0, where u₀ has a double zero, so errors grow like e^{5t}.
 
@@ -219,9 +219,21 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
 
     With other batch sequences, jaxpi leaves the plateau as late as ours does. Key 1234 is the earliest of the seven runs at 0.3. So the "ours is later" pattern of the nine pairs is the paper's batch sequence, like the seed gap before it, and not a difference between the trainers.
   - **The same holds from jaxpi's seed 0–5 networks.** On jaxpi's batches, our trainer drops below 0.3, 0.1 and 0.03 within 0.1–0.4k steps of jaxpi's own runs, and its error at 10k, 20k and 30k is within a few percent of theirs. The two exceptions are seed 2 at 30k (2.2e-2 against 3.1e-2), and seed 5 at 0.1. In seed 5 both runs reach about 0.12 by 12.4k and then fall back to about 0.5, jaxpi's at 12.8k and ours at 14k, after ours had dipped to 9.6e-2. Both recover by 17–18k.
+- **The paper's runs, replayed in our trainer** (`runs/allen_cahn/paper_replay/<row>/`): for each row, the paper's network (jaxpi seed 42), the paper's batch sequence (jaxpi's sampler key 1234, exported to `jaxpi_batches_key1234_200k.npy`, 6.5 GB) and jaxpi's IC grid, all 200k steps. jaxpi with key 1234 matches the paper's logged steps 0 and 100 to 3–4 digits on `default`, `no_causal` and `no_rwf`, so these re-run the paper's own experiment in our code.
+
+  | Row | Paper | jaxpi, same inputs | Ours, same inputs | Ours / paper |
+  |---|--:|--:|--:|--:|
+  | `default` | 5.84e-4 | 5.52e-4 | 5.56e-4 | 0.95 |
+  | `no_causal` | 1.59e-3 | 1.29e-3 | running | |
+  | `no_rwf` | 6.62e-3 | 3.83e-3 | queued | |
+  | `no_grad_norm` | 7.51e-3 | | queued | |
+  | `no_fourier` | 4.35e-1 | | queued | |
+  | `plain` | 5.17e-1 | | queued | |
+
+  - **`default` reproduces the paper.** Our replay stays within about 15% of jaxpi's run at every logged step (rel. L2 0.374 against 0.376 at 10k, 9.4e-4 against 9.4e-4 at 100k) and ends within 1% of it. jaxpi's run is itself within about 10% of the paper's. Its error sits at x = 0, as in every other run (0.102 × the error at (t = 1, x = 0)).
 - **Running** (`runs\batch_test.ps1`, started 22:48 on 2026-10-31):
-  - done: the 30k-step runs above;
-  - now (from 00:35 on 2026-11-01): **the paper's runs replayed in our trainer** (added to `runs\from_paper_init.ps1`, which the queue calls last): for each of the six rows, the paper's network, the paper's batch sequence (`jaxpi_batches_key1234_200k.npy`, 6.5 GB) and jaxpi's IC grid, all 200k steps, into `runs/allen_cahn/paper_replay/<row>/`, about 5.5 h. jaxpi with key 1234 matches the paper's logged steps 0 and 100 to 3–4 digits on `default`, `no_causal` and `no_rwf`, so these re-run the paper's own experiment in our code. How closely they track the paper over 200k steps shows how far round-off alone moves a run;
+  - done: the 30k-step runs above and the `default` replay;
+  - now: the other five replays (added to `runs\from_paper_init.ps1`, which the queue calls last), about 55 min each, until about 06:15 on 2026-11-01;
   - then the rest of the IC-grid test (the same script resumes seed 0 from step 60k and runs seeds 1–2), into `runs/allen_cahn/from_jaxpi_init_icgrid/seedN/`.
   - The scripts `from_jaxpi_init.py` (options `--row`, `--ic-grid`, `--batches`, `--steps`, `--eval-every`), `batch_test_compare.py` and `escape_steps.py`, the exported networks (`init_seed*_legacy*.npz`, also in `~/jaxpi-runs`) and jaxpi's batch sequence (`jaxpi_batches_key1234*.npy`, from `~/jaxpi-runs/export_batches.py`) are in the session scratchpad, outside the repo.
   - The jaxpi chains take about 50 min per run. They skip finished runs, and an interrupted run starts over.
