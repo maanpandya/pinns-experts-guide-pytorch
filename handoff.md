@@ -224,16 +224,18 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   | Row | Paper | jaxpi, same inputs | Ours, same inputs | Ours / paper |
   |---|--:|--:|--:|--:|
   | `default` | 5.84e-4 | 5.52e-4 | 5.56e-4 | 0.95 |
-  | `no_causal` | 1.59e-3 | 1.29e-3 | running | |
-  | `no_rwf` | 6.62e-3 | 3.83e-3 | queued | |
+  | `no_causal` | 1.59e-3 | 1.29e-3 | 5.26e-3 | 3.31 |
+  | `no_rwf` | 6.62e-3 | 3.83e-3 | running | |
   | `no_grad_norm` | 7.51e-3 | | queued | |
   | `no_fourier` | 4.35e-1 | | queued | |
   | `plain` | 5.17e-1 | | queued | |
 
   - **`default` reproduces the paper.** Our replay stays within about 15% of jaxpi's run at every logged step (rel. L2 0.374 against 0.376 at 10k, 9.4e-4 against 9.4e-4 at 100k) and ends within 1% of it. jaxpi's run is itself within about 10% of the paper's. Its error sits at x = 0, as in every other run (0.102 × the error at (t = 1, x = 0)).
+  - **`no_causal` falls back to the plateau where jaxpi's run does not.** Our replay follows jaxpi's run and the paper's to 19.7k (rel. L2 0.084 against 0.085). Then one burst in the losses at 19.8k (L_ic 3.6e-4 and L_r 1.2e-2, from about 2e-6 and 3e-4) throws it back to 0.50. It escapes again by 23k, 3k steps behind, and stays 1.5–4× behind to the end. Our run from the same network on our own batches fell back the same way at 19.3k and ended at 4.44e-3. jaxpi's and the paper's runs have bursts there too (L_r 1.1e-2 at 18k) without falling back. Both trainers fell back from seed 5's network (at 12.8k and 14k), so falling back is not ours alone; whether ours does it more often is tested next.
 - **Running** (`runs\batch_test.ps1`, started 22:48 on 2026-10-31):
-  - done: the 30k-step runs above and the `default` replay;
-  - now: the other five replays (added to `runs\from_paper_init.ps1`, which the queue calls last), about 55 min each, until about 06:15 on 2026-11-01;
+  - done: the 30k-step runs above and the `default` and `no_causal` replays. The queue was restarted at 01:32 (PST) on 2026-11-01 as `runs\from_paper_init.ps1` alone, to put the fall-back test ahead of the IC-grid runs. The `no_rwf` replay resumed from its 5k checkpoint (replays resume exactly, since the batch index follows the step);
+  - now: the other four replays, about 55 min each, until about 05:15;
+  - then the fall-back test on `no_causal` from the paper's network, 30k steps each: jaxpi with sampler keys 1–3 (`~/jaxpi-runs/chain4.sh`), then ours with batch seeds 43–45 (`runs/allen_cahn/batch_test/no_causal_seed42_batchN/`). If jaxpi falls back near 20k about as often as ours, the `no_causal` replay is chance;
   - then the rest of the IC-grid test (the same script resumes seed 0 from step 60k and runs seeds 1–2), into `runs/allen_cahn/from_jaxpi_init_icgrid/seedN/`.
   - The scripts `from_jaxpi_init.py` (options `--row`, `--ic-grid`, `--batches`, `--steps`, `--eval-every`), `batch_test_compare.py` and `escape_steps.py`, the exported networks (`init_seed*_legacy*.npz`, also in `~/jaxpi-runs`) and jaxpi's batch sequence (`jaxpi_batches_key1234*.npy`, from `~/jaxpi-runs/export_batches.py`) are in the session scratchpad, outside the repo.
   - The jaxpi chains take about 50 min per run. They skip finished runs, and an interrupted run starts over.
