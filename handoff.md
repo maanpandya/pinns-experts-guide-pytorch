@@ -187,17 +187,20 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
   | `no_causal` | 1.59e-3 | 4.44e-3 | 2.79 | 5.16e-3 |
   | `no_grad_norm` | 7.51e-3 | 5.51e-3 | 0.73 | 6.14e-3 |
   | `no_rwf` | 6.62e-3 | 6.96e-3 | 1.05 | 1.20e-2 |
-  | `no_fourier` | 4.35e-1 | running | | 5.06e-1 |
-  | `plain` | 5.17e-1 | queued | | 5.08e-1 |
+  | `no_fourier` | 4.35e-1 | 8.10e-2 | 0.19 | 5.06e-1 |
+  | `plain` | 5.17e-1 | 5.04e-1 | 0.97 | 5.08e-1 |
 
   - `no_grad_norm` follows the paper's run closely the whole way: error, both losses, and the causal weights opening by 20k.
   - `no_rwf` leaves the plateau a little later (0.47 at 10k, against the paper's 0.16), then follows the paper's run within 15% from 20k to the end. Its own-network runs (7.6e-3 to 1.39e-2) are all above it, so here too the paper's seed was on the good side.
   - `no_causal` follows it to 10k, then leaves the plateau later (0.50 at 20k, against the paper's 0.084), and stays 1.5–2.8× behind to the end. That is within the 0.47–3.1× spread of the same-network pairs above. jaxpi's own seed-42 run of this row (queued) will show whether jaxpi lands on the paper's value.
-  - All three put their error at x = 0, like every other run: 99.9% or more of the squared error at t = 1 lies within |x| < 0.1, and rel. L2 is 0.064–0.075 × the error at (t = 1, x = 0).
+  - `no_fourier` follows the paper's run to 40k (0.51 against 0.52), then escapes the wrong solution between 40k and 100k, while the paper's run stays at 0.40–0.52. Our `log` seed 0 escaped the same way (5.33e-2; "Seeds 1–2 and the remaining gap" above), so this row has two outcomes: 2 of our 7 runs escape, to 0.05–0.08, and 5 stay at 0.41–0.51, like the paper's single run. Once escaped, its error also sits at x = 0.
+  - `plain` follows the paper's run closely the whole way, and ends within 3% of it.
+  - `no_causal`, `no_grad_norm` and `no_rwf` put their error at x = 0, like every other run that reaches the right solution: 99.9% or more of the squared error at t = 1 lies within |x| < 0.1, and rel. L2 is 0.064–0.075 × the error at (t = 1, x = 0). `plain` and the stuck `no_fourier` runs are wrong everywhere instead (about 5% of the error lies within |x| < 0.1).
+  - **Reading:** from the paper's own networks, four of the six rows land within 0.59–1.05× of the paper, `no_causal` is 2.8× high, and `no_fourier` took the other of its two outcomes. Both of those fall within the run-to-run spread seen elsewhere (same-network pairs differ by up to 3.1×, and `no_fourier` escapes in 2 of 7 runs). So nothing here points to a systematic difference between our pipeline and the paper's. jaxpi's own seed-42 runs of `no_causal` and `no_rwf` (running) will show how close jaxpi itself comes on those two rows.
   - The queue's window closed at 17:59, with `no_grad_norm` at step 132k (the laptop was in use then). It was relaunched at 18:00 and resumed from the checkpoint.
-- **Running** (`runs\from_paper_init.ps1`, started 16:32 on 2026-10-31, about 8 h in all):
-  - our trainer from the paper's initial networks (jaxpi's seed 42) on the other five rows, into `runs/allen_cahn/from_paper_init/<row>/`. `no_causal` and `no_grad_norm` start from `default`'s network (jaxpi's configs for them differ only in the switch, so they build the same one). `no_rwf`, `no_fourier` and `plain` use their own seed-42 networks, exported from jaxpi's configs of the same names. Each matches jaxpi's initial predictions to under 1e-6. Together with `default` (3.44e-4 above) this gives a Table 2 from the paper's own starting networks.
-  - then jaxpi itself, seed 42, on `no_causal` and `no_rwf` (`~/jaxpi-runs/chain2.sh`), to check that jaxpi reproduces the paper on those rows as it does on `default`;
+- **Running** (`runs\from_paper_init.ps1`, started 16:32 on 2026-10-31):
+  - done: our trainer from the paper's initial networks (jaxpi's seed 42) on the other five rows (table above). `no_causal` and `no_grad_norm` start from `default`'s network (jaxpi's configs for them differ only in the switch, so they build the same one). `no_rwf`, `no_fourier` and `plain` use their own seed-42 networks, exported from jaxpi's configs of the same names. Each matches jaxpi's initial predictions to under 1e-6.
+  - now (from 20:31): jaxpi itself, seed 42, on `no_causal` and `no_rwf` (`~/jaxpi-runs/chain2.sh`), to check that jaxpi reproduces the paper on those rows as it does on `default`. Its first 1k steps of `no_causal` match the paper's logged values to about 2%;
   - then the IC-grid test: our trainer from jaxpi's seeds 0–2 with the IC loss on jaxpi's grid (`--ic-grid jaxpi`), into `runs/allen_cahn/from_jaxpi_init_icgrid/seedN/`.
   - The script `from_jaxpi_init.py` (with `--row`) and the exported arrays (`init_seed*_legacy*.npz`, also in `~/jaxpi-runs`) are in the session scratchpad, outside the repo.
   - The jaxpi chains take about 50 min per run. They skip finished runs, and an interrupted run starts over.
@@ -209,7 +212,7 @@ jaxpi's own Allen–Cahn `default` config, run unmodified on this laptop (source
 - **License** (read 2026-10-30): jaxpi may be used, copied and modified for non-profit research only, and not distributed to third parties without Penn's approval. Publications should acknowledge it. Keep its code, and the wrapper, out of this repository, and never imitate its code here.
 
 ## Next steps
-- **Read the runs from the paper's starting networks** (above). Compare each row with Table 2, and the two jaxpi rows with the paper's W&B runs. Same-network pairs differ by up to 3× from batches and round-off alone, so read single runs with that in mind.
+- **Read jaxpi's seed-42 runs of `no_causal` and `no_rwf`** (running) against the paper's W&B runs and our runs from the same networks (table above). Same-network pairs differ by up to 3× from batches and round-off alone, so read single runs with that in mind.
 - **Report Table 2 as distributions.** The paper's values are single seed-42 runs, and for `default` that seed is about 3× better than jaxpi's own typical seed. A fair comparison sets our seed spread against jaxpi's, not against one number.
 - **Comparing with the paper's runs:** the W&B histories can be read without an account through `https://api.wandb.ai/graphql` (project `jaxpi/allen_cahn`; run ids in `docs/decisions.md`, JW). They log the error, both losses, both weights and the minimum causal weight every 100 steps. Prefer them over values read off EG Fig. 4.
 - **When a run looks off,** check `training.png`:
