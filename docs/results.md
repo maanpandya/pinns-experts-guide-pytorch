@@ -69,6 +69,9 @@ These runs repeat the paper's experiment in our code, and isolate the trainer fr
   - Once escaped, jaxpi's runs have ended lower than ours so far: 3.3–4.7e-2 against 5.3–8.1e-2
     (Mann–Whitney p = 0.06, with 4 runs against 3). Our replay escaped later than jaxpi's run on the same
     inputs, when the learning rate had decayed further.
+  - The two trainers still agree on this row. Over the first 100 updates from the same inputs, their IC
+    losses agree to 1e-5. But this row amplifies round-off quickly: two runs of our own trainer, on CPU and
+    GPU, are 28% apart within 300 steps. So from the same inputs, each run is an independent draw.
 
 ## Why our own seeds land above the paper
 
