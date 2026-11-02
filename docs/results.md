@@ -8,7 +8,8 @@ Laptop GPU, at about 1 h per run.
 
 - **Given the paper's starting network and batches, our trainer lands on the paper's values.** Four rows end
   within 0.89–1.01× of the paper. Of the other two, `no_fourier` and `no_causal`, each run can end in one of
-  two ways, and the paper's single run and ours went different ways.
+  two ways, and the paper's single run and ours went different ways. On `no_fourier`, jaxpi's own run from
+  the same inputs went our way.
 - **From our own seeds, `default` ends 5× above the paper, because the paper's run was lucky.** The paper's
   values are single runs from seed 42. jaxpi, the authors' code, run on seeds 0–5, ends 3.2× above the paper
   on `default` by median. jaxpi's runs also all train on one batch sequence, which turns out to be favorable,
@@ -43,9 +44,9 @@ These runs repeat the paper's experiment in our code, and isolate the trainer fr
 | `default` | 5.84e-4 | 5.52e-4 | 5.56e-4 | 0.95 |
 | `no_causal` | 1.59e-3 | 1.29e-3 | 5.26e-3 | 3.31 |
 | `no_rwf` | 6.62e-3 | 3.83e-3 | 6.72e-3 | 1.01 |
-| `no_grad_norm` | 7.51e-3 | | 6.66e-3 | 0.89 |
-| `no_fourier` | 4.35e-1 | | 7.37e-2 | 0.17 |
-| `plain` | 5.17e-1 | | 4.85e-1 | 0.94 |
+| `no_grad_norm` | 7.51e-3 | 7.72e-3 | 6.66e-3 | 0.89 |
+| `no_fourier` | 4.35e-1 | 4.74e-2 | 7.37e-2 | 0.17 |
+| `plain` | 5.17e-1 | 5.03e-1 | 4.85e-1 | 0.94 |
 
 - **`default`, `no_rwf`, `no_grad_norm` and `plain`** follow the paper's runs throughout training. For
   example, `default` reaches rel. L2 9.4e-4 at 100k steps, the same value as jaxpi's run on the same inputs.
@@ -60,8 +61,14 @@ These runs repeat the paper's experiment in our code, and isolate the trainer fr
     slightly more (22 against 19 per run); on `default` it had fewer. The runs with the most bursts did not
     fall back.
 - **`no_fourier` has two outcomes.** A run either stays at a wrong solution (rel. L2 0.4–0.5), as the
-  paper's run does, or leaves it for the right one (0.05–0.08). 3 of our 8 runs of this row leave it,
-  including this replay.
+  paper's run does, or leaves it for the right one (0.03–0.08).
+  - jaxpi's run from the paper's exact network and batches leaves it, as our replay does. It matches the
+    paper's run at 1k steps, escapes from 39k, and ends at 4.74e-2. So the paper's run stayed by chance.
+  - jaxpi escapes in 4 of 7 runs of this row (seeds 42 and 0–5), and our trainer in 3 of 8 (Fisher
+    p = 0.62).
+  - Once escaped, jaxpi's runs have ended lower than ours so far: 3.3–4.7e-2 against 5.3–8.1e-2
+    (Mann–Whitney p = 0.06, with 4 runs against 3). Our replay escaped later than jaxpi's run on the same
+    inputs, when the learning rate had decayed further.
 
 ## Why our own seeds land above the paper
 
