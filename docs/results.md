@@ -64,14 +64,14 @@ These runs repeat the paper's experiment in our code, and isolate the trainer fr
   paper's run does, or leaves it for the right one (0.03–0.08).
   - jaxpi's run from the paper's exact network and batches leaves it, as our replay does. It matches the
     paper's run at 1k steps, escapes from 39k, and ends at 4.74e-2. So the paper's run stayed by chance.
-  - jaxpi escapes in 4 of 7 runs of this row (seeds 42 and 0–5), and our trainer in 3 of 8 (Fisher
-    p = 0.62).
-  - Once escaped, jaxpi's runs have ended lower than ours so far: 3.3–4.7e-2 against 5.3–8.1e-2
-    (Mann–Whitney p = 0.06, with 4 runs against 3). Our replay escaped later than jaxpi's run on the same
-    inputs, when the learning rate had decayed further.
-  - The two trainers still agree on this row. Over the first 100 updates from the same inputs, their IC
-    losses agree to 1e-5. But this row amplifies round-off quickly: two runs of our own trainer, on CPU and
-    GPU, are 28% apart within 300 steps. So from the same inputs, each run is an independent draw.
+  - jaxpi escapes in 4 of 7 runs of this row (seeds 42 and 0–5), and our trainer in 8 of 14 (Fisher
+    p = 1.0). Six of ours start from jaxpi's seed 0–5 networks on jaxpi's batches.
+  - Once escaped, both end at the same level: ours at 2.9–8.1e-2, jaxpi's at 3.3–4.7e-2 (Mann–Whitney
+    p = 0.28). The six from jaxpi's networks and batches end at 2.9–5.8e-2 (p = 0.90).
+  - Over the first 100 updates from the same inputs, the two trainers' IC losses agree to 1e-5. But this
+    row amplifies round-off quickly: two runs of our own trainer, on CPU and GPU, are 28% apart within 300
+    steps. So from the same inputs, each run is an independent draw. Ours escaped from jaxpi's seed 0, 1, 3
+    networks, where jaxpi's runs did not, and jaxpi's escaped from seed 5, where ours stalled at 0.24.
 
 ## Why our own seeds land above the paper
 
