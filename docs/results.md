@@ -10,11 +10,12 @@ Laptop GPU, at about 1 h per run.
   within 0.89–1.01× of the paper. Of the other two, `no_fourier` and `no_causal`, each run can end in one of
   two ways, and the paper's single run and ours went different ways. On `no_fourier`, jaxpi's own run from
   the same inputs went our way.
-- **From our own seeds, `default` ends 5× above the paper, because the paper's run was lucky.** The paper's
-  values are single runs from seed 42. jaxpi, the authors' code, run on seeds 0–5, ends 3.2× above the paper
-  on `default` by median. jaxpi's runs also all train on one batch sequence, which turns out to be favorable,
-  and that accounts for the remaining 1.5×. Given the same starting network and batches, our trainer ends
-  where jaxpi's does.
+- **From our own seeds, `default` ends 5× above the paper, mostly because the paper's run was lucky.** The
+  paper's values are single runs from seed 42. jaxpi, the authors' code, run on seeds 0–5, ends 3.6× above
+  the paper on `default` by median (12 runs, on two batch sequences per seed). Given the same starting network
+  and batches, our trainer ends where jaxpi's does. The remaining 1.4× is not settled. From the same
+  networks, our runs on our own batches end about 1.3× above runs on jaxpi's batches, from either trainer,
+  although the two samplers' batches are statistically the same.
 - By median, our rows rank as the paper's do, except that `no_rwf` and `no_grad_norm` swap; they are within
   15% of each other in the paper.
 
@@ -76,16 +77,9 @@ These runs repeat the paper's experiment in our code, and isolate the trainer fr
 ## Why our own seeds land above the paper
 
 - **The paper's seed was favorable.** jaxpi's own `default` config, run unmodified, reproduces the paper from
-  seed 42 (5.52e-4). Seeds 0–5 give 1.39–4.05e-3 instead, with a median of 1.9e-3, 3.2× the paper.
-- **The paper's batch sequence was favorable too.** Every jaxpi run trains on it, whatever the seed, and
-  ours each draw their own.
-  - From seed 42's network, jaxpi with other sampler keys leaves the early plateau later than with the
-    paper's key, by up to 5k steps. That is about when runs on our own batches leave it.
-  - It helps to the end. From jaxpi's seed 0–5 networks, our trainer ends lower on the paper's batches than
-    on its own in 5 of 6 runs: by 1.5× on geometric average.
-  - Our own-seed `default` median (2.93e-3) is 1.56× jaxpi's seed 0–5 median, so seed and batches together
-    account for the 5.0×.
-- **Nothing measurable remains between our trainer and jaxpi's.** On the same network and batch, the two
+  seed 42 (5.52e-4). Seeds 0–5 give 1.39–4.05e-3 instead on the paper's batch sequence, and 1.60–2.90e-3 on
+  others. The median of those 12 runs is 2.1e-3, 3.6× the paper.
+- **Given the same inputs, our trainer and jaxpi's agree.** On the same network and batch, the two
   trainers' losses agree to 8 digits and their loss weights to 6, and every parameter moves the same way in
   the first update. Over a whole run, given the same starting network and the same batch sequence:
 
@@ -100,8 +94,31 @@ These runs repeat the paper's experiment in our code, and isolate the trainer fr
   | seed 5 | 4.05e-3 | 1.61e-3 | 0.40 |
 
   Five of the seven end within 13% of jaxpi's run. The other two follow it to 50k steps, then part from
-  round-off and end below it. Each on its own batches, ours ended 1.2–1.3× above jaxpi's on geometric
-  average.
+  round-off and end below it.
+- **The paper's batch sequence is an ordinary one.** jaxpi's sampler uses one fixed key whatever the seed, so
+  every jaxpi run trains on the paper's sequence, while ours each draw their own. From seed 42's network
+  that sequence leaves the early plateau sooner than other sequences, by up to 5k steps. But from seeds 0–5,
+  jaxpi on other sequences ends where it does on the paper's (1.02× on geometric average, lower in 3 of 6),
+  and leaves the plateau no later.
+- **What is left comes with our own batches, and may be chance.** From jaxpi's seed 0–5 networks:
+
+  | jaxpi's network | jaxpi, paper's batches | jaxpi, other batches | Ours, paper's batches | Ours, own batches |
+  |---|--:|--:|--:|--:|
+  | seed 0 | 1.51e-3 | 1.80e-3 | 1.53e-3 | 2.58e-3 |
+  | seed 1 | 1.39e-3 | 2.16e-3 | 1.09e-3 | 2.06e-3 |
+  | seed 2 | 1.73e-3 | 1.60e-3 | 1.77e-3 | 1.76e-3 |
+  | seed 3 | 2.89e-3 | 2.31e-3 | 3.12e-3 | 3.26e-3 |
+  | seed 4 | 2.03e-3 | 2.90e-3 | 2.29e-3 | 2.52e-3 |
+  | seed 5 | 4.05e-3 | 2.39e-3 | 1.61e-3 | 4.96e-3 |
+
+  - In every row, our run on our own batches ends above the three runs on jaxpi's batches (geometric mean),
+    by 1.34× on geometric average (Wilcoxon p = 0.03). It also reaches rel. L2 0.1 and 0.03 later, by 1.3–2.2k
+    steps on average.
+  - Yet our batches are statistically the same as jaxpi's. Both are uniform in t and x, with t and x
+    independent and no overlap between draws, and our trainer handles both through the same code.
+  - So this is likely chance across six batch streams. A second round, on fresh streams for both trainers, is
+    running.
+  - Our own-seed `default` median (2.93e-3) is 1.4× jaxpi's seed 0–5 median.
 
 ## Where the error comes from
 
