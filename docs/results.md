@@ -138,6 +138,9 @@ These runs repeat the paper's experiment in our code, and isolate the trainer fr
     of 1.72e-3, so that gap was the spread of five runs.
   - Ours spread wider, from 3.6e-4 to 4.8e-3, against jaxpi's 1.4–4.1e-3. But jaxpi's twelve come from only
     six networks.
+  - On other batch streams, our seed 0–4 networks end at 3.32e-3, 1.10e-3, 2.00e-3, 4.78e-3 and 4.53e-4.
+    With these, our 15 runs from our own networks have a geometric mean 0.96× jaxpi's (p = 0.54). The stream
+    alone moved seed 4's network tenfold, from 4.81e-3 to 4.53e-4, below the paper.
 
 ## Where the error comes from
 
