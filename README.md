@@ -15,7 +15,25 @@ detail open, jaxpi's example configs and code were consulted for that detail
 only. Every such choice is recorded, with its source, in
 [`docs/decisions.md`](docs/decisions.md).
 
-It is a course project for CEE 292 at Stanford, and is a work in progress.
+It is a course project for CEE 292 at Stanford. Its goal is to reproduce the
+Allen–Cahn ablation of the Expert's Guide (its Table 2).
+
+## Results
+
+Given the paper's own starting network and batch sequence, this code reproduces
+Table 2. Four of the six rows end within 0.89–1.01× of the paper's values. The
+other two, `no_causal` and `no_fourier`, are rows where a single run can end in
+one of two ways. On `no_fourier`, jaxpi's own run from the same inputs also ends
+far from the paper's value.
+
+From other seeds, the full pipeline (`default`) ends several times above the
+paper's 5.84e-4, and so does jaxpi. The paper's values are single runs from a
+favorable seed (42). From seeds 0–5, jaxpi ends at a median of 2.1e-3, and from
+the same starting networks this code ends where jaxpi does.
+
+![Final rel. L2 of each Table 2 row, as distributions](docs/table2.png)
+
+Every run and test behind this is in [`docs/results.md`](docs/results.md).
 
 ## Status
 
@@ -25,7 +43,7 @@ It is a course project for CEE 292 at Stanford, and is a work in progress.
 | Random Fourier features, random weight factorization | done |
 | Grad-norm loss weighting, causal weighting | done |
 | Expert's Guide Table 2 ablation configs and runner | done, results in [`docs/results.md`](docs/results.md) |
-| Modified MLP, PirateNet + physics-informed init, NTK weighting | not started |
+| Modified MLP, PirateNet + physics-informed init, NTK weighting | not implemented (Table 2 does not use them) |
 
 ## Install
 
@@ -48,6 +66,9 @@ python scripts/run_ablation.py --out-root runs/allen_cahn/ablation
 # figures and the comparison table, from the CSV logs
 python scripts/plot_ablation.py --out-root runs/allen_cahn/ablation
 python scripts/plot_run.py runs/allen_cahn/ablation/ablation_default
+
+# Table 2 as distributions over runs (docs/table2.png)
+python scripts/plot_table2.py
 ```
 
 Any config value can be overridden from the command line, for example
