@@ -26,10 +26,12 @@ other two, `no_causal` and `no_fourier`, are rows where a single run can end in
 one of two ways. On `no_fourier`, jaxpi's own run from the same inputs also ends
 far from the paper's value.
 
-From other seeds, the full pipeline (`default`) ends several times above the
-paper's 5.84e-4, and so does jaxpi. The paper's values are single runs from a
-favorable seed (42). From seeds 0–5, jaxpi ends at a median of 2.1e-3, and from
-the same starting networks this code ends where jaxpi does.
+From other seeds, the full pipeline (`default`) usually ends several times
+above the paper's 5.84e-4, and so does jaxpi. The paper's values are single
+runs from a favorable seed (42). From seeds 0–5, jaxpi's `default` ends at a
+median of 2.1e-3. Over ten seeds, ours ends at a median of 2.6e-3, from 3.6e-4
+to 4.8e-3, and cannot be told apart from jaxpi's runs (Mann–Whitney p = 0.34).
+From jaxpi's own starting networks, this code ends where jaxpi does.
 
 ![Final rel. L2 of each Table 2 row, as distributions](docs/table2.png)
 

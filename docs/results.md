@@ -10,12 +10,12 @@ Laptop GPU, at about 1 h per run.
   within 0.89–1.01× of the paper. Of the other two, `no_fourier` and `no_causal`, each run can end in one of
   two ways, and the paper's single run and ours went different ways. On `no_fourier`, jaxpi's own run from
   the same inputs went our way.
-- **From our own seeds, `default` ends 5× above the paper, mostly because the paper's run was lucky.** The
-  paper's values are single runs from seed 42. jaxpi, the authors' code, run on seeds 0–5, ends 3.6× above
-  the paper on `default` by median (12 runs, on two batch sequences per seed). From those same networks, our
-  trainer ends where jaxpi's does, on jaxpi's batches and on our own: 18 runs on jaxpi's batches and 12 on
-  ours have the same geometric mean, 2.01e-3. Our five own-seed runs end 1.4× above jaxpi's by median
-  (Mann–Whitney p = 0.06); five more seeds are running.
+- **From our own seeds, `default` ends 4.5× above the paper by median, because the paper's run was lucky.**
+  The paper's values are single runs from seed 42. jaxpi, the authors' code, run on seeds 0–5, ends 3.6×
+  above the paper on `default` by median (12 runs, on two batch sequences per seed). Our ten seeds end
+  where jaxpi's runs do: their geometric mean is 1.05× jaxpi's (Mann–Whitney p = 0.34). They range from
+  3.6e-4, below the paper, to 4.8e-3. From jaxpi's own seed 0–5 networks, our trainer ends where jaxpi's
+  does, on jaxpi's batches and on our own (18 and 12 runs, both at a geometric mean of 2.01e-3).
 - By median, our rows rank as the paper's do, except that `no_rwf` and `no_grad_norm` swap; they are within
   15% of each other in the paper.
 
@@ -23,20 +23,23 @@ Laptop GPU, at about 1 h per run.
 
 Final rel. L2 of each row after 200k steps. Left: from the paper's own network and batch sequence. Right:
 from other seeds, jaxpi's (seeds 0–5; for `default` on two batch sequences each) and ours. The black tick
-is the paper's single run. `scripts/plot_table2.py` draws it from the run folders.
+is the paper's single run, and n gives the number of runs in each strip, left to right.
+`scripts/plot_table2.py` draws it from the run folders.
 
 ## Our runs, from our own seeds
 
-| Row | Fourier features | RWF | Grad norm | Causal | Seeds 0, 1, 2 (3, 4) | Median | Paper | Median / paper |
+| Row | Fourier features | RWF | Grad norm | Causal | Seeds 0, 1, 2 | Median | Paper | Median / paper |
 |---|:-:|:-:|:-:|:-:|---|--:|--:|--:|
-| `default` | yes | yes | yes | yes | 2.93e-3, 2.27e-3, 2.27e-3 (3.67e-3, 4.81e-3) | 2.93e-3 | 5.84e-4 | 5.0 |
+| `default` | yes | yes | yes | yes | 2.93e-3, 2.27e-3, 2.27e-3 | 2.60e-3 (10 seeds) | 5.84e-4 | 4.5 |
 | `no_causal` | yes | yes | yes | no | 5.61e-3, 4.95e-3, 5.16e-3 | 5.16e-3 | 1.59e-3 | 3.2 |
 | `no_rwf` | yes | no | yes | yes | 1.39e-2, 1.20e-2, 7.60e-3 | 1.20e-2 | 6.62e-3 | 1.8 |
 | `no_grad_norm` | yes | yes | no | yes | 2.86e-3, 6.41e-3, 6.14e-3 | 6.14e-3 | 7.51e-3 | 0.82 |
 | `no_fourier` | no | yes | yes | yes | 5.12e-1, 5.06e-1, 4.24e-1 | 5.06e-1 | 4.35e-1 | 1.2 |
 | `plain` | no | no | no | no | 5.25e-1, 4.94e-1, 5.08e-1 | 5.08e-1 | 5.17e-1 | 0.98 |
 
-`scripts/run_ablation.py` produces these runs with the configs in `configs/allen_cahn/ablation/`.
+`default` also has seeds 3–9: 3.67e-3, 4.81e-3, 1.07e-3, 3.64e-4, 1.72e-3, 4.14e-3 and 4.09e-3. Its
+median is over all ten, and seed 6 ends below the paper. `scripts/run_ablation.py` produces these runs with
+the configs in `configs/allen_cahn/ablation/`.
 
 ## The paper's runs, replayed in our trainer
 
@@ -127,10 +130,14 @@ These runs repeat the paper's experiment in our code, and isolate the trainer fr
     the same sampler. So six streams cannot resolve a factor of 1.3, and the first round's gap was chance.
   - This agrees with the batches themselves. Ours and jaxpi's are statistically the same: uniform in t and x,
     with t and x independent and no overlap between draws. Our trainer handles both through the same code.
-- **Nothing known separates our own networks from jaxpi's either.** Layer by layer, our initial weights match
-  jaxpi's in scale (std / Glorot 0.92–1.02) and in their RWF scales (log g 0.49–0.51 ± 0.10). Our five
-  own-seed `default` runs end 1.4× above jaxpi's twelve by median (Mann–Whitney p = 0.06). They draw the same
-  batch streams as the first round above (generator seed s + 1). Five more seeds are running.
+- **Our own networks end where jaxpi's do.** Layer by layer, our initial weights match jaxpi's in scale
+  (std / Glorot 0.92–1.02) and in their RWF scales (log g 0.49–0.51 ± 0.10). Over ten seeds, our `default`
+  runs have a geometric mean of 2.23e-3 against 2.13e-3 for jaxpi's twelve (1.05×, Mann–Whitney p = 0.34),
+  and a median of 2.60e-3 against 2.09e-3.
+  - Our first five seeds had ended 1.4× above jaxpi's by median (p = 0.06). The next five ended at a median
+    of 1.72e-3, so that gap was the spread of five runs.
+  - Ours spread wider, from 3.6e-4 to 4.8e-3, against jaxpi's 1.4–4.1e-3. But jaxpi's twelve come from only
+    six networks.
 
 ## Where the error comes from
 

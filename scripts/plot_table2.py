@@ -48,8 +48,12 @@ def strip(ax, x, values, color, label, width=0.2):
     v = np.sort(values)
     dx = (np.arange(len(v)) % 3 - 1) * width / 2 if len(v) > 1 else np.zeros(1)
     ax.scatter(x + dx, v, s=34, color=color, edgecolor="white", linewidth=0.8, zorder=3, label=label)
-    if len(v) > 1:  # run counts on one line above the x axis, under their strip
-        ax.text(x, 0.03, f"n={len(v)}", transform=ax.get_xaxis_transform(), ha="center", fontsize=7, color=INK_2)
+
+
+def counts(ax, x, ns):
+    """Run counts of a row's strips, left to right, on one line above the x axis."""
+    ax.text(x, 0.03, "n = " + ", ".join(map(str, ns)), transform=ax.get_xaxis_transform(), ha="center",
+            fontsize=7, color=INK_2)
 
 
 def paper_tick(ax, x, y, label=None, half=0.42):
@@ -77,6 +81,10 @@ def main():
         ours = own_seeds(runs, row)
         if ours:
             strip(right, i + 0.2, ours, SERIES[0], "ours, own seeds" if i == 0 else None)
+        ns = [len(JAXPI_SEEDS[row])] if row in JAXPI_SEEDS else []
+        ns += [len(ours)] if ours else []
+        if ns:
+            counts(right, i if len(ns) > 1 else i + 0.2, ns)
     left.set_title("From the paper's inputs (its network and batches)", loc="left")
     right.set_title("From other seeds", loc="left")
     left.set_ylabel("rel. L2 error after 200k steps")
