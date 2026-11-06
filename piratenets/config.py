@@ -29,7 +29,7 @@ class RWFConfig:
     enabled: bool = True
     mu: float = 0.5          # scale factors s ~ N(mu, sigma^2), W = diag(exp(s)) V
     sigma: float = 0.1
-    scale_param: str = "direct"  # "direct": train exp(s) itself (jaxpi, D21) | "log": train s (EG Algorithm 2)
+    scale_param: str = "direct"  # "direct": train exp(s) itself (authors' code) | "log": train s (Algorithm 2)
 
 
 @dataclass
@@ -59,7 +59,8 @@ class TrainingConfig:
     ic_sampling: str = "grid"  # "grid": the reference x-grid (fixed) | "random": n_ic fresh points per step
     n_ic: int = 4096         # initial-condition points per step when ic_sampling = "random"
     seed: int = 0
-    derivatives: str = "func"  # "func" (torch.func vmap/grad/jvp) | "autograd"
+    derivatives: str = "autograd"  # "autograd" | "func" (torch.func vmap/grad/jvp); same values up to round-off
+    compile: bool = False      # torch.compile the per-step losses (always with "func" derivatives); needs Triton on GPU
 
 
 @dataclass
@@ -67,7 +68,7 @@ class WeightingConfig:
     scheme: str = "grad_norm"  # "none" | "grad_norm"
     update_every: int = 1000   # f in Algorithm 1
     momentum: float = 0.9      # alpha in eq. (2.15)
-    grad_norm_reduction: str = "mean"  # "mean" (jaxpi) | "sum" (eqs. 2.12-2.14 as printed)
+    grad_norm_reduction: str = "mean"  # "mean" (authors' code) | "sum" (eqs. 2.12-2.14 as printed)
 
 
 @dataclass

@@ -5,8 +5,9 @@ Grad-norm scheme, every f steps:
     lambda_hat_k = R_j ||grad L_j|| / ||grad L_k||                       (2.12-2.14)
     lambda_k <- alpha * lambda_k + (1 - alpha) * lambda_hat_k            (2.15)
 
-where R is the mean over the loss terms (as in jaxpi, the default) or their sum
-(as printed in eqs. 2.12-2.14); see docs/decisions.md, D20.
+where R is the mean over the loss terms (as in the authors' code, the default) or
+their sum (as printed in eqs. 2.12-2.14). With two loss terms the mean halves every
+lambda_hat but leaves their ratio unchanged; see docs/implementation.md.
 
 All weights start at 1 and are plain floats, so they never carry gradients.
 """

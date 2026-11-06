@@ -2,7 +2,7 @@
 
     python scripts/train.py --config configs/allen_cahn/ablation/default.yaml
     python scripts/train.py --config ... --set training.steps=300 logging.eval_every=100
-    python scripts/train.py --config ... --out-dir /content/drive/MyDrive/piratenets/runs/default
+    python scripts/train.py --config ... --set training.compile=true training.seed=1
 
 Resumes from <checkpoint_dir>/last.pt if it exists (use --no-resume to start over).
 """

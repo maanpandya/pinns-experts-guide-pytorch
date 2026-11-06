@@ -1,4 +1,5 @@
 import csv
+import importlib.util
 import json
 import math
 import sys
@@ -40,7 +41,7 @@ def test_resume_reproduces_uninterrupted_run_exactly(tiny_cfg, tmp_path, device)
     ref_params, ref_rows = _params(ref), _rows(tiny_cfg.out_dir / "metrics.csv")
     ref_lambdas = dict(ref.weighting.lambdas)
 
-    # stopped after 5 steps, then continued by a fresh trainer (as after a Colab disconnect)
+    # stopped after 5 steps, then continued by a fresh trainer (as after an interruption)
     tiny_cfg.logging.out_dir = str(tmp_path / "run_resumed")
     Trainer(tiny_cfg).train(resume=False, max_steps=5)
     resumed = Trainer(tiny_cfg)
@@ -86,7 +87,7 @@ def test_resume_rejects_a_different_config(tiny_cfg):
 
 
 def test_resume_reads_a_checkpoint_without_scale_param_as_log(tiny_cfg):
-    # Checkpoints written before rwf.scale_param existed trained s (D21).
+    # Checkpoints written before rwf.scale_param existed trained s.
     tiny_cfg.model.rwf.scale_param = "log"
     Trainer(tiny_cfg).train(resume=False, max_steps=5)
     path = tiny_cfg.checkpoint_dir / "last.pt"
@@ -100,6 +101,28 @@ def test_resume_reads_a_checkpoint_without_scale_param_as_log(tiny_cfg):
     resumed = Trainer(tiny_cfg)
     resumed.train(resume=True)
     assert resumed.step == tiny_cfg.training.steps
+
+
+def test_config_mismatch_ignores_how_derivatives_are_computed(tiny_cfg):
+    saved = config_to_dict(tiny_cfg)
+    tiny_cfg.training.derivatives = "func" if tiny_cfg.training.derivatives == "autograd" else "autograd"
+    tiny_cfg.training.compile = not tiny_cfg.training.compile
+    assert config_mismatch(saved, tiny_cfg) == []
+
+
+@pytest.mark.skipif(not (torch.cuda.is_available() and importlib.util.find_spec("triton")),
+                    reason="needs CUDA and Triton")
+def test_compiled_step_matches_eager(tiny_cfg):
+    tiny_cfg.device = "cuda"
+    tiny_cfg.training.compile = True
+    trainer = Trainer(tiny_cfg)
+    batch = trainer.sample_batch()
+    eager, w_eager = trainer.compute_losses(batch)
+    compiled, w = trainer.step_losses(batch)
+    for name in eager:
+        assert torch.allclose(compiled[name], eager[name], rtol=1e-5, atol=0), name
+    assert torch.allclose(w, w_eager, rtol=1e-5)
+    assert trainer.train(resume=False)["finished"]
 
 
 def test_config_mismatch_ignores_rwf_settings_when_rwf_is_off(tiny_cfg):

@@ -6,7 +6,7 @@ w = 2 pi / P is P-periodic in x together with all of its x-derivatives.
 
 FourierFeatures: random Fourier features gamma(v) = [cos(B v), sin(B v)] with
 B_ij ~ N(0, scale^2) at initialization (Expert's Guide Sec. 4.2, eq. 4.3). B is
-trained together with the network by default (docs/decisions.md, D5).
+trained together with the network by default, as in the authors' code.
 """
 import math
 

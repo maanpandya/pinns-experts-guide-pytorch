@@ -74,8 +74,8 @@ def sample_collocation(n: int, num_chunks: int, generator: torch.Generator, devi
 
     Returns t, x of shape (num_chunks, n // num_chunks). The times are sorted, so
     row i holds the i-th group of n // num_chunks earliest points: the chunks
-    have equal counts and their boundaries fall at the sample quantiles of t
-    (docs/decisions.md, D10).
+    have equal counts and their boundaries fall at the sample quantiles of t,
+    as in the authors' code.
     """
     if n % num_chunks:
         raise ValueError(f"batch size {n} must be divisible by num_chunks {num_chunks}")

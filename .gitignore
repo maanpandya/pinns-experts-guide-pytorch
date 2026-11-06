@@ -1,13 +1,9 @@
-# Papers are copyrighted: keep local, never commit
-papers/
-
-# Training artifacts
-checkpoints/
+# Training outputs
 runs/
 outputs/
+checkpoints/
 *.pt
 *.ckpt
-ablation_results.zip
 
 # Python
 __pycache__/
@@ -16,11 +12,6 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
-.ipynb_checkpoints/
-
-# Local Claude Code overrides
-.claude/settings.local.json
-CLAUDE.local.md
 
 # OS
 .DS_Store

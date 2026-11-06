@@ -43,7 +43,7 @@ def test_ablation_rows_differ_only_in_their_switches():
         assert diff == expected, fname
 
 
-def test_default_row_matches_paper_and_jaxpi_config():
+def test_default_row_matches_the_paper_and_the_authors_config():
     cfg = load_config(ABLATION / "default.yaml")
     # EG Sec. 7 and Algorithm 1
     assert (cfg.model.arch, cfg.model.num_layers, cfg.model.hidden_dim, cfg.model.activation) == ("mlp", 4, 256, "tanh")
@@ -51,12 +51,12 @@ def test_default_row_matches_paper_and_jaxpi_config():
     assert cfg.training.batch_size == 4096
     assert cfg.weighting.update_every == 1000 and cfg.weighting.momentum == 0.9
     assert cfg.causal.tol == 1.0
-    # jaxpi examples/allen_cahn/configs/default.py (docs/decisions.md D2, D3, D4, D6, D12)
+    # the authors' config, jaxpi examples/allen_cahn/configs/default.py
     assert cfg.training.steps == 200_000
     assert cfg.model.fourier.scale == 1.0 and cfg.model.fourier.embed_dim == 256
     assert cfg.model.rwf.mu == 0.5 and cfg.model.rwf.sigma == 0.1
     assert cfg.causal.num_chunks == 32
-    # design decisions taken from jaxpi's code (D5, D9, D11, D20, D21)
+    # design decisions taken from the authors' code
     assert cfg.model.fourier.trainable is True
     assert cfg.weighting.grad_norm_reduction == "mean"
     assert cfg.model.rwf.scale_param == "direct"
@@ -74,7 +74,7 @@ def test_overrides_and_strict_keys(tmp_path):
 
 
 def test_saved_config_without_scale_param_reads_as_log():
-    # Runs saved before rwf.scale_param existed trained s (D21).
+    # Runs saved before rwf.scale_param existed trained s.
     data = config_to_dict(Config())
     del data["model"]["rwf"]["scale_param"]
     assert config_from_dict(data).model.rwf.scale_param == "direct"

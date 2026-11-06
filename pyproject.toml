@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "piratenets"
 version = "0.1.0"
-description = "Independent PyTorch reimplementation of PirateNets and the Expert's Guide PINN training pipeline"
+description = "PyTorch implementation of the Expert's Guide PINN training pipeline, with a reproduction of its Allen-Cahn ablation"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Maan Pandya" }]
@@ -20,6 +20,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
+compile = ["triton-windows; sys_platform == 'win32'"]  # Linux CUDA wheels of PyTorch already include Triton
+
+[project.urls]
+Homepage = "https://github.com/maanpandya/piratenets-pytorch"
 
 [tool.setuptools.packages.find]
 include = ["piratenets*"]

@@ -32,11 +32,11 @@ CSV_FIELDS = [
 
 def _resume_relevant(cfg_dict: dict) -> dict:
     """The parts of a config that must match for a resume. Logging, device, name, the
-    total step count and the derivative implementation (same values up to round-off)
-    may change, e.g. to extend a run or to move it to another GPU. So may the RWF
-    settings when RWF is off, since they then have no effect."""
+    total step count, the derivative implementation and compilation (same values up to
+    round-off) may change, e.g. to extend a run or to move it to another GPU. So may the
+    RWF settings when RWF is off, since they then have no effect."""
     d = {k: v for k, v in cfg_dict.items() if k not in ("logging", "device", "name")}
-    d["training"] = {k: v for k, v in d["training"].items() if k not in ("steps", "derivatives")}
+    d["training"] = {k: v for k, v in d["training"].items() if k not in ("steps", "derivatives", "compile")}
     if not d["model"]["rwf"]["enabled"]:
         d["model"] = {**d["model"], "rwf": {"enabled": False}}
     return d
@@ -135,6 +135,13 @@ class Trainer:
             ["ic", "r"], cfg.weighting.scheme, cfg.weighting.update_every, cfg.weighting.momentum,
             cfg.weighting.grad_norm_reduction,
         )
+        # The losses of each training step, compiled on request. torch.compile cannot trace the
+        # double backward of the autograd derivatives, so the compiled losses use the torch.func
+        # ones. The loss-weight update keeps the eager losses: it takes two backward passes
+        # through one graph, and runs only every weighting.update_every steps.
+        self.step_losses = self.compute_losses
+        if cfg.training.compile:
+            self.step_losses = torch.compile(lambda batch: self.compute_losses(batch, derivatives="func"))
         # Collocation points come from their own generator so that sampling is
         # reproducible independently of anything else that draws random numbers.
         self.generator = torch.Generator(device=self.device)
@@ -160,22 +167,22 @@ class Trainer:
             x_ic = ac.sample_initial(cfg.training.n_ic, self.generator, self.device)
         return t, x, x_ic
 
-    def compute_losses(self, batch):
+    def compute_losses(self, batch, derivatives: str | None = None):
         cfg = self.cfg
         t, x, x_ic = batch
         u_ic = self.model(torch.zeros_like(x_ic), x_ic)
         loss_ic = torch.mean((u_ic - ac.initial_condition(x_ic)) ** 2)
 
-        r = ac.pde_residual(self.model, t.reshape(-1), x.reshape(-1), cfg.training.derivatives)
+        r = ac.pde_residual(self.model, t.reshape(-1), x.reshape(-1), derivatives or cfg.training.derivatives)
         chunk_losses = torch.mean(r.reshape(t.shape) ** 2, dim=1)
         loss_r, w = causal.residual_loss(chunk_losses, cfg.causal.tol, cfg.causal.enabled)
         return {"ic": loss_ic, "r": loss_r}, w
 
     def train_step(self):
         """One Adam step; on update steps the loss weights are then recomputed from the
-        gradients at the new parameters on the same batch (docs/decisions.md, D13)."""
+        gradients at the new parameters on the same batch, as in the authors' code."""
         batch = self.sample_batch()
-        losses, w = self.compute_losses(batch)
+        losses, w = self.step_losses(batch)
         loss = self.weighting.total_loss(losses)
         self.optimizer.zero_grad(set_to_none=True)
         loss.backward()

@@ -1,6 +1,6 @@
-"""Where the error of finished Allen-Cahn runs sits (see handoff.md, "jaxpi itself").
+"""Where the error of finished Allen-Cahn runs sits (docs/results.md, "Where the error comes from").
 
-    python scripts/error_location.py runs/allen_cahn/rwf_direct_seed*/ablation_default
+    python scripts/error_location.py runs/allen_cahn/ablation/ablation_default
 
 At x = 0 the initial condition has a double zero, so the solution starts at the unstable
 state u = 0 and small errors there grow roughly like exp(5 t). For each run this prints

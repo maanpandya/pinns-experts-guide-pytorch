@@ -1,10 +1,11 @@
 """Run the Allen-Cahn ablation (Expert's Guide Table 2): one run per YAML, in table order.
 
 Finished runs are skipped and interrupted runs resume from their last checkpoint,
-so after a Colab disconnect just run the same command again. A finished run made
+so after an interruption just run the same command again. A finished run made
 with different settings stops the script instead of being reported as the row.
 
-    python scripts/run_ablation.py --out-root /content/drive/MyDrive/piratenets/ablation
+    python scripts/run_ablation.py
+    python scripts/run_ablation.py --set training.compile=true    # about 1.6x faster on GPU
     python scripts/run_ablation.py --only default plain
     python scripts/run_ablation.py --set training.steps=2000      # quick trial of every row
 """

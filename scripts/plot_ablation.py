@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from plot_style import INK_2, SERIES, apply_style, read_metrics
 
 # Table 2 of the Expert's Guide (arXiv:2308.08468): switches (FF, RWF, grad norm, causal) and rel. L2.
-# The plain row is printed as "51.74 x 10^-1"; we read it as 5.174e-1 (docs/decisions.md, D14).
+# The plain row is printed as "51.74 x 10^-1", a typo for 5.174e-1 (the logged run ends at 0.5174).
 ROWS = {
     "default":      ("Default",             (1, 1, 1, 1), 5.84e-4),
     "no_fourier":   ("No Fourier features", (0, 1, 1, 1), 4.35e-1),

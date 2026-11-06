@@ -5,13 +5,13 @@ W = diag(exp(s)) V, one scale per output neuron. W is first initialized with the
 Glorot scheme, s ~ N(mu, sigma^2), and V = W / exp(s), so the network function at
 initialization is unchanged. With ``scale_param: log`` gradient descent then acts
 on (s, V, b). With ``scale_param: direct`` (the default) it acts on (g, V, b),
-where g = exp(s) is stored and trained as is (as in jaxpi; docs/decisions.md,
-D21). The network function is the same, but the gradients and Adam's steps on
+where g = exp(s) is stored and trained as is, as in the authors' code. The
+network function is the same, but the gradients and Adam's steps on
 the scales differ.
 
 Glorot initialization uses a normal distribution truncated at two standard
-deviations and rescaled so that Var(W) = 2 / (fan_in + fan_out) still holds
-(docs/decisions.md, D8). Biases start at zero.
+deviations and rescaled so that Var(W) = 2 / (fan_in + fan_out) still holds,
+as JAX's glorot_normal does. Biases start at zero.
 """
 import math
 
