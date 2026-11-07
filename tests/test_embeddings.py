@@ -1,9 +1,9 @@
 import torch
 
-from piratenets.config import ModelConfig
-from piratenets.embeddings import FourierFeatures
-from piratenets.models import build_model
-from piratenets.problems import allen_cahn as ac
+from pinnguide.config import ModelConfig
+from pinnguide.embeddings import FourierFeatures
+from pinnguide.models import build_model
+from pinnguide.problems import allen_cahn as ac
 
 
 def _model(fourier=True, rwf=True):

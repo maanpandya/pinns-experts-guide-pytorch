@@ -1,4 +1,4 @@
-# piratenets-pytorch
+# pinns-experts-guide-pytorch
 
 A PyTorch implementation of the physics-informed neural network (PINN) training pipeline from
 [*An Expert's Guide to Training Physics-informed Neural Networks*](https://arxiv.org/abs/2308.08468)
@@ -40,8 +40,8 @@ seeds 0–5, against 2.6e-3 here (Mann–Whitney p = 0.34). Seed 42 is a favorab
 ## Installation
 
 ```bash
-git clone https://github.com/maanpandya/piratenets-pytorch.git
-cd piratenets-pytorch
+git clone https://github.com/maanpandya/pinns-experts-guide-pytorch.git
+cd pinns-experts-guide-pytorch
 pip install -e .          # or ".[dev]" to run the tests
 ```
 
@@ -77,6 +77,23 @@ python scripts/plot_table2.py
 ```
 
 Finished rows are skipped, so the same command picks up where it stopped.
+
+### From the paper's own inputs
+
+The "from the paper's inputs" results start from jaxpi's seed-42 networks and its batch sequence. Export
+them with jaxpi (in a JAX environment, with a [jaxpi](https://github.com/PredictiveIntelligenceLab/jaxpi)
+checkout), then replay each row in this trainer:
+
+```bash
+# In the JAX environment: one network per jaxpi config, and the batch sequence (6.5 GB)
+python scripts/jaxpi/export_init.py --jaxpi ~/jaxpi --config default --out init_default.npz
+python scripts/jaxpi/export_batches.py --jaxpi ~/jaxpi --out jaxpi_batches.npy
+
+# Here
+python scripts/replay_jaxpi.py --row default --init init_default.npz --batches jaxpi_batches.npy
+```
+
+`scripts/replay_jaxpi.py --help` lists which jaxpi config each row starts from.
 
 ## Configuration
 
@@ -115,10 +132,11 @@ compiled and 50.8 eager. The paper reports about 16 minutes per run with JAX on 
 ## Project layout
 
 ```
-piratenets/            model (embeddings, RWF layers, MLP), loss weighting, causal weights, trainer
-piratenets/problems/   Allen–Cahn: PDE residual, sampling, reference data
+pinnguide/             model (embeddings, RWF layers, MLP), loss weighting, causal weights, trainer
+pinnguide/problems/    Allen–Cahn: PDE residual, sampling, reference data
 configs/               one YAML per experiment, one per Table 2 row
-scripts/               train, run_ablation, benchmark_step, plot_run, plot_ablation, plot_table2, error_location
+scripts/               train, run_ablation, replay_jaxpi, benchmark_step, plot_run, plot_ablation, plot_table2, error_location
+scripts/jaxpi/         export jaxpi's initial networks and batches (run with JAX and jaxpi installed)
 data/                  reference solution and the script that generates it
 docs/                  results.md, implementation.md
 tests/                 pytest suite (pytest -q)
@@ -129,7 +147,7 @@ and NTK loss weighting.
 
 ## Citation
 
-If you use this code, please cite the papers it implements:
+If you use this code, please cite the paper it implements:
 
 ```bibtex
 @article{wang2023expert,
@@ -137,14 +155,6 @@ If you use this code, please cite the papers it implements:
   author  = {Wang, Sifan and Sankaran, Shyam and Wang, Hanwen and Perdikaris, Paris},
   journal = {arXiv preprint arXiv:2308.08468},
   year    = {2023}
-}
-
-@article{wang2024piratenets,
-  title   = {PirateNets: Physics-informed Deep Learning with Residual Adaptive Networks},
-  author  = {Wang, Sifan and Li, Bowen and Chen, Yuhan and Perdikaris, Paris},
-  journal = {Journal of Machine Learning Research},
-  volume  = {25},
-  year    = {2024}
 }
 ```
 

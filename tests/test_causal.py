@@ -2,7 +2,7 @@ import math
 
 import torch
 
-from piratenets.causal import causal_weights, residual_loss
+from pinnguide.causal import causal_weights, residual_loss
 
 
 def test_causal_weights_properties():

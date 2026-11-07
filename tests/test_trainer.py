@@ -7,8 +7,8 @@ import sys
 import pytest
 import torch
 
-from piratenets.config import OptimConfig, config_to_dict
-from piratenets.trainer import Trainer, config_mismatch, disable_power_throttling, lr_factor
+from pinnguide.config import OptimConfig, config_to_dict
+from pinnguide.trainer import Trainer, config_mismatch, disable_power_throttling, lr_factor
 
 
 def _rows(path):

@@ -16,7 +16,7 @@ relative L2. The metric is the relative L2 error ‖u_θ − u_ref‖ / ‖u_ref
 
 ## Model
 
-`piratenets/embeddings.py`, `layers.py`, `models.py`:
+`pinnguide/embeddings.py`, `layers.py`, `models.py`:
 
 1. **Periodic embedding** (EG Sec. 6.3): (t, x) ↦ [t, cos(πx), sin(πx)]. Every x-derivative of the network
    is then exactly periodic, so the loss has no boundary term. All six rows use it, including `plain`.

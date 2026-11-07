@@ -12,8 +12,8 @@ import time
 
 import torch
 
-from piratenets.config import load_config
-from piratenets.trainer import Trainer
+from pinnguide.config import load_config
+from pinnguide.trainer import Trainer
 
 VARIANTS = {
     "autograd": ["training.derivatives=autograd", "training.compile=false"],

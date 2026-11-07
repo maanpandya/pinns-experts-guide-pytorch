@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from piratenets.weighting import LossWeighting
+from pinnguide.weighting import LossWeighting
 
 
 def _losses():

@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from piratenets.config import Config
+from pinnguide.config import Config
 
 torch.set_float32_matmul_precision("highest")
 

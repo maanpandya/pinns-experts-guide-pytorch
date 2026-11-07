@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from piratenets.config import (
+from pinnguide.config import (
     REPO_ROOT, Config, config_from_dict, config_to_dict, load_config, saved_config_from_dict,
 )
 

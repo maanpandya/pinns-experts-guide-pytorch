@@ -1,7 +1,7 @@
 import torch
 
-from piratenets.problems import allen_cahn as ac
-from piratenets.trainer import Trainer
+from pinnguide.problems import allen_cahn as ac
+from pinnguide.trainer import Trainer
 
 
 def test_collocation_points_are_uniform_and_chunked_by_sorted_time():

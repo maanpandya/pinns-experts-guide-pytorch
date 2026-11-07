@@ -1,6 +1,6 @@
 import numpy as np
 
-from piratenets.problems.allen_cahn import load_reference
+from pinnguide.problems.allen_cahn import load_reference
 
 
 def test_reference_shape_and_initial_condition():

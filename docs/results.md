@@ -49,7 +49,7 @@ the luck of the seed.
 - **`no_causal` ends high after one setback.** Ours follows the paper's run until 19.7k steps. Then a single
   burst in the losses throws it back to the early plateau, and it stays behind to the end. jaxpi falls back
   too: from the same network, on ten other batch sequences, jaxpi fell back in 1 of 10 runs of 30k steps
-  and this code in 3 of 11 (Fisher p = 0.33).
+  and this code in 3 of 11 (one-sided Fisher p = 0.33).
 - **`no_fourier` has two outcomes.** A run either stays at a wrong solution (rel. L2 0.4–0.5), as the paper's
   run did, or escapes to the right one (0.03–0.08). jaxpi's run from the paper's exact inputs escapes, as
   ours does. Over all runs of this row, jaxpi escapes in 4 of 7 and this code in 8 of 14, to the same levels
@@ -112,6 +112,7 @@ amplified about 100×. That is why runs with the same losses can end several tim
 
 - **Our own seeds:** `python scripts/run_ablation.py --set training.seed=N --out-root runs/allen_cahn/seedN`,
   then `python scripts/plot_table2.py` to redraw the figure with them.
-- **The same-input runs** start from networks and a batch sequence exported from jaxpi. These are not part
-  of this repository (the batch sequence alone is 6.5 GB); their results are listed in
-  `scripts/plot_table2.py`.
+- **The same-input runs** start from networks and a batch sequence exported from jaxpi with
+  `scripts/jaxpi/export_init.py` and `export_batches.py` (these need JAX and jaxpi; the batch sequence is
+  6.5 GB, so it is not in this repository). `scripts/replay_jaxpi.py` then trains a row from them; see the
+  README. Their results are listed in `scripts/plot_table2.py`.

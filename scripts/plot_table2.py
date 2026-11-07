@@ -18,8 +18,8 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from piratenets.config import load_config
-from piratenets.trainer import config_mismatch
+from pinnguide.config import load_config
+from pinnguide.trainer import config_mismatch
 from plot_style import INK, INK_2, SERIES, apply_style, plt
 
 ROWS = ["default", "no_causal", "no_rwf", "no_grad_norm", "no_fourier", "plain"]

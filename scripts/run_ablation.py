@@ -17,8 +17,8 @@ from pathlib import Path
 import torch
 import yaml
 
-from piratenets.config import REPO_ROOT, load_config
-from piratenets.trainer import Trainer, config_mismatch
+from pinnguide.config import REPO_ROOT, load_config
+from pinnguide.trainer import Trainer, config_mismatch
 
 ROWS = ["default", "no_fourier", "no_rwf", "no_grad_norm", "no_causal", "plain"]
 

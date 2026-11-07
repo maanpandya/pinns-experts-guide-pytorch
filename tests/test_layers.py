@@ -2,8 +2,8 @@ import pytest
 import torch
 from torch import nn
 
-from piratenets.config import RWFConfig
-from piratenets.layers import Dense
+from pinnguide.config import RWFConfig
+from pinnguide.layers import Dense
 
 
 def test_rwf_dense_equals_linear_with_recombined_weight():

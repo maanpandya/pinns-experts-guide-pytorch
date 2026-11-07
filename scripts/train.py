@@ -8,8 +8,8 @@ Resumes from <checkpoint_dir>/last.pt if it exists (use --no-resume to start ove
 """
 import argparse
 
-from piratenets.config import load_config
-from piratenets.trainer import Trainer
+from pinnguide.config import load_config
+from pinnguide.trainer import Trainer
 
 
 def main():
